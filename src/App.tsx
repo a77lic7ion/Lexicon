@@ -26,6 +26,7 @@ export default function App() {
     autoPlace,
     toggleSound,
     isSoundEnabled,
+    skipTurn,
   } = useGameLogic();
 
   const [showMenu, setShowMenu] = useState(true);
@@ -258,6 +259,7 @@ export default function App() {
               onToggleSound={toggleSound}
               isSoundEnabled={isSoundEnabled}
               onSetDifficulty={setDifficulty}
+              onSkipTurn={skipTurn}
             />
           </motion.div>
         )}

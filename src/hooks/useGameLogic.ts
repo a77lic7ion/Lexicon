@@ -655,13 +655,30 @@ export const useGameLogic = () => {
     setError(null);
   };
 
-  const findBestWord = (bank: LetterTile[]): string | null => {
+  const skipTurn = () => {
+    setGameState(prev => {
+      const activeId = prev.activePlayer;
+      const opponentId = activeId === 1 ? 2 : 1;
+      
+      return {
+        ...prev,
+        activePlayer: opponentId,
+        turnCount: prev.turnCount + 1,
+      };
+    });
+    setMessage(`${gameState.players[gameState.activePlayer].name} skipped their turn.`);
+    setError(null);
+  };
+
+  const findBestWord = (bank: LetterTile[], playedWords: string[]): string | null => {
     const letters = bank.map(l => l.letter.toUpperCase()).join('');
     // Simple greedy search for longest word in COMMON_WORDS that can be formed
     const sortedWords = Array.from(COMMON_WORDS).sort((a, b) => b.length - a.length);
     
     for (const word of sortedWords) {
       if (word.length > letters.length) continue;
+      if (playedWords.includes(word)) continue; // Don't repeat words
+
       let tempLetters = letters;
       let canForm = true;
       for (const char of word) {
@@ -675,10 +692,6 @@ export const useGameLogic = () => {
       if (canForm) return word;
     }
     
-    // Fallback: just pick first 3-5 letters if no common word found
-    if (letters.length >= 3) {
-      return letters.slice(0, Math.min(letters.length, 5));
-    }
     return null;
   };
 
@@ -704,7 +717,7 @@ export const useGameLogic = () => {
 
         // 1. Strategic Bombing
         if (currActivePlayer.bank.length >= bombThreshold) {
-          const word = findBestWord(currActivePlayer.bank);
+          const word = findBestWord(currActivePlayer.bank, current.playedWords);
           if (word) {
             const wordLen = word.length;
             const target: any = {};
@@ -729,7 +742,7 @@ export const useGameLogic = () => {
           }
         }
 
-        // 2. Strategic Firing
+        // 2. Strategic Firing or Skip
         if (untargeted.length > 0) {
           let target;
           if (difficulty !== 'easy' && revealed.length > 0) {
@@ -738,6 +751,9 @@ export const useGameLogic = () => {
             target = untargeted[Math.floor(Math.random() * untargeted.length)];
           }
           setTimeout(() => fire(target.row, target.col), 0);
+        } else {
+          // No targets left? Should be game over, but just in case, skip.
+          setTimeout(() => skipTurn(), 0);
         }
         
         return current;
@@ -891,6 +907,7 @@ export const useGameLogic = () => {
     autoPlace,
     toggleSound,
     isSoundEnabled,
+    skipTurn,
   };
 };
 

@@ -20,6 +20,7 @@ interface BattleScreenProps {
   onToggleSound: () => void;
   isSoundEnabled: boolean;
   onSetDifficulty: (id: 1 | 2, difficulty: Difficulty) => void;
+  onSkipTurn: () => void;
 }
 
 export const BattleScreen: React.FC<BattleScreenProps> = ({ 
@@ -32,7 +33,8 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   error, 
   onToggleSound, 
   isSoundEnabled,
-  onSetDifficulty
+  onSetDifficulty,
+  onSkipTurn
 }) => {
   const [isBombModalOpen, setIsBombModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -60,6 +62,8 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   const opponentId = viewingPlayerId === 1 ? 2 : 1;
   const opponent = gameState.players[opponentId];
   const isMyTurn = gameState.activePlayer === viewingPlayerId;
+  
+  const totalLettersLeft = opponent.grid.flat().filter(c => c.tileId && !c.isHit).length;
 
   if (showPassDevice) {
     return (
@@ -191,6 +195,11 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
                   <Target className="w-5 h-5 text-red-500" />
                 </h2>
                 <p className="text-xs font-mono text-slate-500 uppercase tracking-widest">Strike {opponent.name}</p>
+                <div className="mt-1 px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded-full">
+                  <span className="text-[10px] font-mono font-bold text-red-500 uppercase">
+                    {totalLettersLeft} Letters Remaining
+                  </span>
+                </div>
               </div>
               
               <Grid 
@@ -290,6 +299,20 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
               <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 skew-x-[-20deg]" />
               <Zap className={`w-8 h-8 ${viewingPlayer.bank.length >= 3 && isMyTurn ? 'fill-current' : ''}`} />
               WORD BOMB
+            </button>
+
+            <button
+              onClick={onSkipTurn}
+              disabled={!isMyTurn}
+              className={`
+                w-full p-3 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 border
+                ${!isMyTurn
+                  ? 'bg-slate-900/50 text-slate-700 border-slate-800 cursor-not-allowed'
+                  : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white'}
+              `}
+            >
+              <LogOut className="w-4 h-4 rotate-90" />
+              SKIP TURN
             </button>
           </div>
 
