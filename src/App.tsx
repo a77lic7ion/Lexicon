@@ -3,7 +3,7 @@ import { useGameLogic } from './hooks/useGameLogic';
 import { PlacementScreen } from './components/PlacementScreen';
 import { BattleScreen } from './components/BattleScreen';
 import { GameOverScreen } from './components/GameOverScreen';
-import { TutorialScreen } from './components/TutorialScreen';
+import { RulebookScreen } from './components/RulebookScreen';
 import { SettingsModal } from './components/SettingsModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sword, BookOpen, Settings, Play, Info, Volume2, VolumeX } from 'lucide-react';
@@ -66,7 +66,7 @@ export default function App() {
   };
 
   if (showTutorial) {
-    return <TutorialScreen onBack={() => setShowTutorial(false)} />;
+    return <RulebookScreen onBack={() => setShowTutorial(false)} />;
   }
 
   if (showMenu) {
