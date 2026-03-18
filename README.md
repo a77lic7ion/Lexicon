@@ -1,20 +1,27 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Lexicon: Word-Harvesting Battle
 
-# Run and deploy your AI Studio app
+A strategic word-building battle game.
 
-This contains everything you need to run your app locally.
+## Hosting on Vercel
 
-View your app in AI Studio: https://ai.studio/apps/d1f2f079-6cbf-486e-ac86-a1fb917841e5
+This project is configured for seamless hosting on Vercel.
 
-## Run Locally
+### Steps to Deploy:
 
-**Prerequisites:**  Node.js
+1. **Push to GitHub**: Ensure all changes are committed and pushed to your GitHub repository.
+2. **Import to Vercel**:
+   - Go to [Vercel](https://vercel.com/new).
+   - Select your GitHub repository.
+   - Vercel should automatically detect the **Vite** framework.
+3. **Configure Settings**:
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+   - **Install Command**: `npm install`
+4. **Environment Variables**:
+   - If you add any third-party API keys (e.g., for Gemini), add them in the Vercel project settings.
+5. **Deploy**: Click **Deploy**.
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### How it works:
+- **Frontend**: The Vite build is served as static files.
+- **Backend**: The `api/` folder contains a Vercel Serverless Function that runs the Express logic for any `/api/*` routes.
+- **Routing**: `vercel.json` handles the SPA routing (redirecting all non-API requests to `index.html`).
