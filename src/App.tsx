@@ -165,6 +165,7 @@ export default function App() {
               onFinalize={() => finalizeSetup(gameState.activePlayer)}
               onUndo={undoPlacement}
               onAutoPlace={autoPlace}
+              onQuit={() => setShowMenu(true)}
               error={error}
             />
           </motion.div>
@@ -181,6 +182,8 @@ export default function App() {
               gameState={gameState}
               onFire={fire}
               onExecuteBomb={executeBomb}
+              onQuit={() => setShowMenu(true)}
+              onRestart={resetGame}
               message={message}
               error={error}
             />

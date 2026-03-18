@@ -442,7 +442,13 @@ export const useGameLogic = () => {
       const updatedOpponent = { ...prev.players[opponentId], grid: newGrid };
       const updatedActive = { ...prev.players[activeId] };
       if (harvestedLetter) {
-        updatedActive.bank = [...updatedActive.bank, harvestedLetter];
+        const letterWithId = { ...harvestedLetter, uniqueId: Math.random().toString(36).substring(7) };
+        updatedActive.bank = [...updatedActive.bank, letterWithId];
+        setMessage(`HIT! Harvested '${harvestedLetter.letter}' from ${updatedOpponent.name}`);
+      } else if (hit) {
+        setMessage("HIT!");
+      } else {
+        setMessage("MISS");
       }
 
       const nextPlayer = bonusShot ? activeId : opponentId;
@@ -487,21 +493,23 @@ export const useGameLogic = () => {
 
     const bankLetters = activePlayer.bank.map(l => l.letter);
     const wordLetters = upperWord.split('');
-    const tempBank = [...bankLetters];
+    const newBank = [...activePlayer.bank];
 
     for (const char of wordLetters) {
-      const idx = tempBank.indexOf(char);
+      const idx = newBank.findIndex(l => l.letter === char);
       if (idx === -1) {
-        const wildcardIdx = tempBank.indexOf('★');
+        const wildcardIdx = newBank.findIndex(l => l.tier === 'wildcard');
         if (wildcardIdx === -1) {
           setError('Missing letters in bank');
           return;
         }
-        tempBank.splice(wildcardIdx, 1);
+        newBank.splice(wildcardIdx, 1);
       } else {
-        tempBank.splice(idx, 1);
+        newBank.splice(idx, 1);
       }
     }
+
+    setMessage(`Word Bomb: ${upperWord} cast! Consumed ${upperWord.length} letters.`);
 
     const length = upperWord.length;
     const opponent = gameState.players[opponentId];
@@ -523,11 +531,12 @@ export const useGameLogic = () => {
           cell.hitsReceived = (cell.hitsReceived || 0) + 1;
           const harvested = LETTER_POOL.find(l => l.letter === cell.letter && l.tier === cell.tier);
           if (harvested) {
+            const letterWithId = { ...harvested, uniqueId: Math.random().toString(36).substring(7) };
             setGameState(prev => ({
               ...prev,
               players: {
                 ...prev.players,
-                [activeId]: { ...prev.players[activeId], bank: [...prev.players[activeId].bank, harvested] }
+                [activeId]: { ...prev.players[activeId], bank: [...prev.players[activeId].bank, letterWithId] }
               }
             }));
           }
@@ -573,16 +582,6 @@ export const useGameLogic = () => {
         newGrid[target.row].forEach(c => { if (c.tileId) c.isHit = true; else c.isMiss = true; });
       } else if (target.col !== undefined) {
         newGrid.forEach(r => { if (r[target.col!].tileId) r[target.col!].isHit = true; else r[target.col!].isMiss = true; });
-      }
-    }
-
-    const newBank = [...activePlayer.bank];
-    for (const char of wordLetters) {
-      const idx = newBank.findIndex(l => l.letter === char);
-      if (idx !== -1) newBank.splice(idx, 1);
-      else {
-        const wildIdx = newBank.findIndex(l => l.letter === '★');
-        if (wildIdx !== -1) newBank.splice(wildIdx, 1);
       }
     }
 

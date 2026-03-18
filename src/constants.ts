@@ -2,6 +2,7 @@ export type Tier = 'common' | 'uncommon' | 'rare' | 'wildcard' | 'special';
 
 export interface LetterTile {
   id: string;
+  uniqueId?: string;
   letter: string;
   tier: Tier;
   points: number;

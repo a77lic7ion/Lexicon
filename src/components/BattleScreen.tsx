@@ -1,23 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Grid } from './Grid';
 import { LetterBank } from './LetterBank';
 import { WordBombModal } from './WordBombModal';
-import { Zap, Target, History, Settings, Info, Trophy } from 'lucide-react';
+import { Zap, Target, History, Settings, Info, Trophy, LogOut, RefreshCw, Users } from 'lucide-react';
 import { GameState } from '../types';
 
 interface BattleScreenProps {
   gameState: GameState;
   onFire: (r: number, c: number) => void;
   onExecuteBomb: (word: string, target: any) => void;
+  onQuit: () => void;
+  onRestart: () => void;
   message: string;
   error: string | null;
 }
 
-export const BattleScreen: React.FC<BattleScreenProps> = ({ gameState, onFire, onExecuteBomb, message, error }) => {
+export const BattleScreen: React.FC<BattleScreenProps> = ({ gameState, onFire, onExecuteBomb, onQuit, onRestart, message, error }) => {
   const [isBombModalOpen, setIsBombModalOpen] = useState(false);
-  const activePlayer = gameState.players[gameState.activePlayer];
-  const opponent = gameState.players[gameState.activePlayer === 1 ? 2 : 1];
+  
+  const isAIGame = gameState.players[2].isAI;
+  const [showPassDevice, setShowPassDevice] = useState(false);
+  const [viewingPlayerId, setViewingPlayerId] = useState<1 | 2>(isAIGame ? 1 : gameState.activePlayer);
+
+  useEffect(() => {
+    if (isAIGame) {
+      setViewingPlayerId(1);
+    } else if (gameState.activePlayer !== viewingPlayerId) {
+      setShowPassDevice(true);
+    }
+  }, [gameState.activePlayer, isAIGame, viewingPlayerId]);
+
+  const handleReady = () => {
+    setViewingPlayerId(gameState.activePlayer);
+    setShowPassDevice(false);
+  };
+
+  const viewingPlayer = gameState.players[viewingPlayerId];
+  const opponentId = viewingPlayerId === 1 ? 2 : 1;
+  const opponent = gameState.players[opponentId];
+  const isMyTurn = gameState.activePlayer === viewingPlayerId;
+
+  if (showPassDevice) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 p-8">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="flex flex-col items-center gap-8 bg-slate-900 p-12 rounded-3xl border border-slate-800 max-w-md w-full text-center"
+        >
+          <Users className="w-24 h-24 text-slate-500" />
+          <div className="flex flex-col gap-2">
+            <h2 className="text-3xl font-serif font-bold text-white">
+              Pass Device to {gameState.players[gameState.activePlayer].name}
+            </h2>
+            <p className="text-slate-400 font-mono text-sm">
+              It is now their turn to strike.
+            </p>
+          </div>
+          <button
+            onClick={handleReady}
+            className="w-full p-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-2xl font-serif font-bold text-xl transition-all shadow-lg shadow-emerald-500/20"
+          >
+            I AM READY
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8 p-8 bg-slate-950 min-h-screen items-center">
@@ -31,11 +81,27 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gameState, onFire, o
             </span>
           </h1>
           <p className="text-slate-500 font-mono text-sm uppercase tracking-widest">
-            {gameState.activePlayer === 1 ? 'Player 1' : 'Player 2'}'s Turn
+            {gameState.players[gameState.activePlayer].name}'s Turn
           </p>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex gap-3">
+          <button 
+            onClick={onRestart}
+            className="p-3 bg-slate-900 hover:bg-yellow-500/20 text-slate-500 hover:text-yellow-500 rounded-2xl border border-slate-800 hover:border-yellow-500/50 transition-all flex items-center gap-2 text-xs font-mono font-bold"
+            title="Restart Game"
+          >
+            <RefreshCw className="w-5 h-5" />
+            RESTART
+          </button>
+          <button 
+            onClick={onQuit}
+            className="p-3 bg-slate-900 hover:bg-red-500/20 text-slate-500 hover:text-red-500 rounded-2xl border border-slate-800 hover:border-red-500/50 transition-all flex items-center gap-2 text-xs font-mono font-bold"
+            title="Quit to Menu"
+          >
+            <LogOut className="w-5 h-5" />
+            QUIT
+          </button>
           <button className="p-3 bg-slate-900 hover:bg-slate-800 rounded-2xl border border-slate-800 transition-colors">
             <History className="w-6 h-6 text-slate-400" />
           </button>
@@ -65,7 +131,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gameState, onFire, o
 
           <Grid 
             grid={opponent.grid} 
-            onCellClick={onFire}
+            onCellClick={isMyTurn ? onFire : undefined}
             isEnemy={true}
             showLabels={true}
           />
@@ -109,21 +175,21 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gameState, onFire, o
             </div>
             <div className="scale-75 origin-top-left">
               <Grid 
-                grid={activePlayer.grid} 
+                grid={viewingPlayer.grid} 
                 isEnemy={false}
                 showLabels={false}
               />
             </div>
           </div>
 
-          <LetterBank bank={activePlayer.bank} />
+          <LetterBank bank={viewingPlayer.bank} />
 
           <button
             onClick={() => setIsBombModalOpen(true)}
-            disabled={activePlayer.bank.length < 3}
+            disabled={viewingPlayer.bank.length < 3 || !isMyTurn}
             className={`
               w-full p-6 rounded-2xl font-serif font-bold text-2xl transition-all flex items-center justify-center gap-3
-              ${activePlayer.bank.length < 3 
+              ${viewingPlayer.bank.length < 3 || !isMyTurn
                 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' 
                 : 'bg-yellow-500 text-slate-950 hover:bg-yellow-400 shadow-lg shadow-yellow-500/20'}
             `}
@@ -137,7 +203,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gameState, onFire, o
       <WordBombModal 
         isOpen={isBombModalOpen}
         onClose={() => setIsBombModalOpen(false)}
-        bank={activePlayer.bank}
+        bank={viewingPlayer.bank}
         onExecute={onExecuteBomb}
         playedWords={gameState.playedWords}
       />

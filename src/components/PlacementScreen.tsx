@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { LetterTile, LETTER_POOL, SPECIAL_TILES } from '../constants';
 import { Grid } from './Grid';
 import { Tile } from './Tile';
-import { RotateCw, Check, Trash2, Info } from 'lucide-react';
+import { RotateCw, Check, Trash2, Info, LogOut } from 'lucide-react';
 
 interface PlacementScreenProps {
   player: { id: 1 | 2; name: string; grid: any; tilesPlaced: number };
@@ -11,6 +11,7 @@ interface PlacementScreenProps {
   onFinalize: () => void;
   onUndo: (playerId: 1 | 2) => void;
   onAutoPlace: (playerId: 1 | 2) => void;
+  onQuit: () => void;
   error: string | null;
 }
 
@@ -20,10 +21,12 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
   onFinalize, 
   onUndo,
   onAutoPlace,
+  onQuit,
   error 
 }) => {
   const [selectedTile, setSelectedTile] = useState<LetterTile | null>(null);
   const [orientation, setOrientation] = useState<'h' | 'v'>('h');
+  const [hoveredCell, setHoveredCell] = useState<{ r: number; c: number } | null>(null);
 
   // Filter pool to show what's available
   // For simplicity, we'll just show a selection of tiles
@@ -41,21 +44,80 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
     }
   };
 
+  const getPreviewCells = () => {
+    if (!selectedTile || !hoveredCell) return [];
+    
+    const cells: { r: number; c: number; isValid: boolean }[] = [];
+    let allValid = true;
+
+    // Check bounds and basic validity for the whole shape first
+    for (let i = 0; i < selectedTile.size; i++) {
+      const r = orientation === 'v' ? hoveredCell.r + i : hoveredCell.r;
+      const c = orientation === 'h' ? hoveredCell.c + i : hoveredCell.c;
+      
+      const outOfBounds = r >= 10 || c >= 10;
+      const overlap = !outOfBounds && player.grid[r][c].tileId !== null;
+      
+      if (outOfBounds || overlap) {
+        allValid = false;
+      }
+      
+      if (!outOfBounds) {
+        cells.push({ r, c, isValid: true }); // We'll set the final validity later
+      }
+    }
+
+    // Check buffer rule for all cells in the potential placement
+    if (allValid) {
+      for (const cell of cells) {
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            const nr = cell.r + dr;
+            const nc = cell.c + dc;
+            if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) {
+              const neighbor = player.grid[nr][nc];
+              if (neighbor.tileId && neighbor.tileId !== selectedTile.id) {
+                allValid = false;
+                break;
+              }
+            }
+          }
+          if (!allValid) break;
+        }
+        if (!allValid) break;
+      }
+    }
+
+    return cells.map(c => ({ ...c, isValid: allValid }));
+  };
+
   return (
     <div className="flex flex-col lg:flex-row gap-8 items-start justify-center p-8 bg-slate-950 min-h-screen">
       <div className="flex flex-col gap-6 w-full lg:w-auto">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-4xl font-serif font-bold text-white tracking-tight">
-            {player.name}: SETUP
-          </h1>
-          <p className="text-slate-500 font-mono text-sm uppercase tracking-widest">
-            Place 15 tiles to begin the battle
-          </p>
+        <div className="flex justify-between items-start">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-4xl font-serif font-bold text-white tracking-tight">
+              {player.name}: SETUP
+            </h1>
+            <p className="text-slate-500 font-mono text-sm uppercase tracking-widest">
+              Place 15 tiles to begin the battle
+            </p>
+          </div>
+          <button
+            onClick={onQuit}
+            className="p-3 bg-slate-900 hover:bg-red-500/20 text-slate-500 hover:text-red-500 rounded-2xl border border-slate-800 hover:border-red-500/50 transition-all flex items-center gap-2 text-xs font-mono font-bold"
+          >
+            <LogOut className="w-4 h-4" />
+            QUIT
+          </button>
         </div>
 
         <Grid 
           grid={player.grid} 
           onCellClick={handleCellClick}
+          onCellMouseEnter={(r, c) => setHoveredCell({ r, c })}
+          onCellMouseLeave={() => setHoveredCell(null)}
+          previewCells={getPreviewCells()}
           showLabels={true}
         />
 

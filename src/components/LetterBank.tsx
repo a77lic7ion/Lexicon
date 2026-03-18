@@ -25,7 +25,7 @@ export const LetterBank: React.FC<LetterBankProps> = ({ bank, onTileClick, title
         <AnimatePresence>
           {bank.map((tile, idx) => (
             <motion.div
-              key={`${tile.id}-${idx}`}
+              key={tile.uniqueId || `${tile.id}-${idx}`}
               initial={{ scale: 0, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0, opacity: 0, y: -20 }}
