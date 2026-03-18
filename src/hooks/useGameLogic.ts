@@ -1,9 +1,15 @@
 import { useState, useCallback, useEffect } from 'react';
 import { GameState, GamePhase, WinMode, CellState, PlayerState } from '../types';
-import { LETTER_POOL, SPECIAL_TILES, LetterTile } from '../constants';
-import { isValidWord } from '../utils/dictionary';
+import { LETTER_POOL, SPECIAL_TILES, LetterTile, SOUNDS } from '../constants';
+import { COMMON_WORDS, isValidWord } from '../utils/dictionary';
 
 const GRID_SIZE = 10;
+
+const playSound = (url: string) => {
+  const audio = new Audio(url);
+  audio.volume = 0.4;
+  audio.play().catch(() => {}); // Ignore errors if browser blocks autoplay
+};
 
 const createEmptyGrid = (): CellState[][] => {
   const grid: CellState[][] = [];
@@ -32,6 +38,8 @@ const initialPlayerState = (id: 1 | 2): PlayerState => ({
   bank: [],
   tilesPlaced: 0,
   isReady: false,
+  isAI: false,
+  placementHistory: [],
 });
 
 export const useGameLogic = () => {
@@ -48,29 +56,198 @@ export const useGameLogic = () => {
     turnCount: 0,
   });
 
-  const [message, setMessage] = useState<string>('Player 1: Place your tiles.');
+  const [message, setMessage] = useState<string>('Place your tiles.');
   const [error, setError] = useState<string | null>(null);
 
   const resetGame = useCallback(() => {
-    setGameState({
+    setGameState(prev => ({
       phase: 'setup',
       winMode: 'hybrid',
       activePlayer: 1,
       players: {
-        1: initialPlayerState(1),
-        2: initialPlayerState(2),
+        1: { ...initialPlayerState(1), name: prev.players[1].name },
+        2: { ...initialPlayerState(2), name: prev.players[2].name },
       },
       playedWords: [],
       winner: null,
       turnCount: 0,
-    });
-    setMessage('Player 1: Place your tiles.');
+    }));
+    setMessage('Place your tiles.');
     setError(null);
   }, []);
 
   const setWinMode = (mode: WinMode) => {
     setGameState(prev => ({ ...prev, winMode: mode }));
   };
+
+  const updatePlayerName = (id: 1 | 2, name: string) => {
+    setGameState(prev => ({
+      ...prev,
+      players: {
+        ...prev.players,
+        [id]: { ...prev.players[id], name }
+      }
+    }));
+  };
+
+  const toggleAI = (id: 1 | 2) => {
+    setGameState(prev => ({
+      ...prev,
+      players: {
+        ...prev.players,
+        [id]: { ...prev.players[id], isAI: !prev.players[id].isAI }
+      }
+    }));
+  };
+
+  const undoPlacement = (player: 1 | 2) => {
+    setGameState(prev => {
+      const p = prev.players[player];
+      if (!p.placementHistory || p.placementHistory.length === 0) return prev;
+
+      const last = p.placementHistory[p.placementHistory.length - 1];
+      const newGrid = [...p.grid.map(r => [...r])];
+
+      // Clear cells
+      for (let i = 0; i < last.size; i++) {
+        const r = last.orientation === 'v' ? last.row + i : last.row;
+        const c = last.orientation === 'h' ? last.col + i : last.col;
+        newGrid[r][c] = {
+          row: r,
+          col: c,
+          tileId: null,
+          letter: null,
+          tier: null,
+          isHit: false,
+          isMiss: false,
+        };
+      }
+
+      return {
+        ...prev,
+        players: {
+          ...prev.players,
+          [player]: {
+            ...p,
+            grid: newGrid,
+            tilesPlaced: p.tilesPlaced - 1,
+            placementHistory: p.placementHistory.slice(0, -1),
+          }
+        }
+      };
+    });
+  };
+
+  const autoPlace = (player: 1 | 2) => {
+    const playerState = gameState.players[player];
+    let currentGrid = [...playerState.grid.map(r => [...r])];
+    let placedCount = 0;
+    const history: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[] = [];
+
+    // Reset grid first
+    currentGrid = createEmptyGrid();
+
+    const pool = [...LETTER_POOL];
+    const specials = [...SPECIAL_TILES];
+    
+    // Intelligent-ish placement:
+    // 1. Place 15 tiles
+    // 2. Mix of tiers
+    // 3. Respect buffer
+    
+    const toPlace: LetterTile[] = [];
+    // 3 Vowels (Common)
+    const vowels = pool.filter(t => ['A', 'E', 'I', 'O', 'U'].includes(t.letter)).slice(0, 3);
+    toPlace.push(...vowels);
+    // 2 Rare
+    toPlace.push(...pool.filter(t => t.tier === 'rare').slice(0, 2));
+    // 1 Wildcard
+    toPlace.push(pool.find(t => t.tier === 'wildcard')!);
+    // 4 Uncommon (1x2)
+    toPlace.push(...pool.filter(t => t.tier === 'uncommon').slice(0, 4));
+    // 4 Special
+    toPlace.push(...specials);
+    // Fill rest with common
+    const remaining = 15 - toPlace.length;
+    toPlace.push(...pool.filter(t => t.tier === 'common' && !toPlace.includes(t)).slice(0, remaining));
+
+    for (const tile of toPlace) {
+      let placed = false;
+      let attempts = 0;
+      while (!placed && attempts < 100) {
+        attempts++;
+        const r = Math.floor(Math.random() * GRID_SIZE);
+        const c = Math.floor(Math.random() * GRID_SIZE);
+        const orientation = Math.random() > 0.5 ? 'h' : 'v';
+
+        // Check bounds and overlap
+        const cells: { r: number; c: number }[] = [];
+        let valid = true;
+        for (let i = 0; i < tile.size; i++) {
+          const nr = orientation === 'v' ? r + i : r;
+          const nc = orientation === 'h' ? c + i : c;
+          if (nr >= GRID_SIZE || nc >= GRID_SIZE || currentGrid[nr][nc].tileId) {
+            valid = false;
+            break;
+          }
+          cells.push({ r: nr, c: nc });
+        }
+
+        if (valid) {
+          // Check buffer
+          for (const cell of cells) {
+            for (let dr = -1; dr <= 1; dr++) {
+              for (let dc = -1; dc <= 1; dc++) {
+                const nr = cell.r + dr;
+                const nc = cell.c + dc;
+                if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
+                  if (currentGrid[nr][nc].tileId) {
+                    valid = false;
+                    break;
+                  }
+                }
+              }
+              if (!valid) break;
+            }
+            if (!valid) break;
+          }
+        }
+
+        if (valid) {
+          cells.forEach(cell => {
+            currentGrid[cell.r][cell.c] = {
+              ...currentGrid[cell.r][cell.c],
+              tileId: tile.id,
+              letter: tile.letter,
+              tier: tile.tier,
+              isSpecial: tile.isSpecial,
+              hitsRequired: tile.isSpecial === 'vault' ? 2 : 1,
+              hitsReceived: 0,
+            };
+          });
+          history.push({ row: r, col: c, tileId: tile.id, size: tile.size, orientation });
+          placedCount++;
+          placed = true;
+        }
+      }
+    }
+
+    setGameState(prev => ({
+      ...prev,
+      players: {
+        ...prev.players,
+        [player]: {
+          ...prev.players[player],
+          grid: currentGrid,
+          tilesPlaced: placedCount,
+          placementHistory: history,
+        },
+      },
+    }));
+    playSound(SOUNDS.PLACE);
+  };
+
+
 
   const placeTile = (player: 1 | 2, row: number, col: number, tile: LetterTile, orientation: 'h' | 'v') => {
     const playerState = gameState.players[player];
@@ -92,9 +269,7 @@ export const useGameLogic = () => {
       cellsToFill.push({ r, c });
     }
 
-    // Check 1-cell buffer rule (no diagonal or adjacent)
-    // Actually PRD says "no tile may be placed adjacent to another tile (1-cell buffer required on all sides)"
-    // This usually means no sharing edges or corners.
+    // Check 1-cell buffer rule
     for (const cell of cellsToFill) {
       for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
@@ -112,6 +287,7 @@ export const useGameLogic = () => {
     }
 
     // Apply placement
+    playSound(SOUNDS.PLACE);
     cellsToFill.forEach(cell => {
       newGrid[cell.r][cell.c] = {
         ...newGrid[cell.r][cell.c],
@@ -132,6 +308,7 @@ export const useGameLogic = () => {
           ...prev.players[player],
           grid: newGrid,
           tilesPlaced: prev.players[player].tilesPlaced + 1,
+          placementHistory: [...(prev.players[player].placementHistory || []), { row, col, tileId: tile.id, size: tile.size, orientation }],
         },
       },
     }));
@@ -140,7 +317,6 @@ export const useGameLogic = () => {
 
   const finalizeSetup = (player: 1 | 2) => {
     const p = gameState.players[player];
-    // Validation: 15 tiles total, 3+ vowels, max 2 rare, max 1 wildcard
     if (p.tilesPlaced < 15) {
       setError('Place all 15 tiles first');
       return;
@@ -148,10 +324,9 @@ export const useGameLogic = () => {
 
     setGameState(prev => {
       const nextPlayer = player === 1 ? 2 : 1;
-      const allReady = prev.players[nextPlayer].isReady || (player === 2);
       
       if (player === 1) {
-        setMessage('Player 2: Place your tiles.');
+        setMessage(`${prev.players[2].name}: Place your tiles.`);
         return {
           ...prev,
           players: {
@@ -161,7 +336,7 @@ export const useGameLogic = () => {
           activePlayer: 2,
         };
       } else {
-        setMessage('Battle begins! Player 1 turn.');
+        setMessage(`Battle begins! ${prev.players[1].name}'s turn.`);
         return {
           ...prev,
           phase: 'battle',
@@ -173,6 +348,22 @@ export const useGameLogic = () => {
         };
       }
     });
+  };
+
+  const checkWin = (opponent: PlayerState, mode: WinMode, lastWordLen: number = 0): boolean => {
+    const allTiles = new Set(opponent.grid.flat().filter(c => c.tileId).map(c => c.tileId));
+    const destroyedTiles = Array.from(allTiles).filter(tid => 
+      opponent.grid.flat().filter(c => c.tileId === tid).every(c => c.isHit)
+    );
+
+    if (mode === 'classic') {
+      return destroyedTiles.length >= 15;
+    } else if (mode === 'lexicon') {
+      return lastWordLen >= 8;
+    } else if (mode === 'hybrid') {
+      return destroyedTiles.length >= 10 || lastWordLen >= 7;
+    }
+    return false;
   };
 
   const fire = (row: number, col: number) => {
@@ -194,17 +385,17 @@ export const useGameLogic = () => {
 
     if (cell.tileId) {
       hit = true;
+      playSound(SOUNDS.HIT);
       cell.isHit = true;
       cell.hitsReceived = (cell.hitsReceived || 0) + 1;
 
-      // Special logic: Vault
+      // Special logic
       const isVault = cell.isSpecial === 'vault';
       const isPoison = cell.isSpecial === 'poison';
       const isMirror = cell.isSpecial === 'mirror';
       const isCharged = cell.isSpecial === 'charged';
 
       if (isPoison) {
-        // Discard random letter from attacker bank
         const activePlayer = gameState.players[activeId];
         if (activePlayer.bank.length > 0) {
           const newBank = [...activePlayer.bank];
@@ -224,25 +415,18 @@ export const useGameLogic = () => {
       if (shouldHarvest && !isPoison) {
         harvestedLetter = LETTER_POOL.find(l => l.letter === cell.letter && l.tier === cell.tier) || null;
         if (isMirror) {
-          // Mirror doesn't destroy the tile
-          cell.isHit = false; // Keep it on grid? PRD says "remains on grid and is NOT destroyed"
-          // But we need to mark it as mirrored so it can't be hit again for a letter
           cell.isHit = true; 
         }
       }
 
-      // Uncommon bonus draw
       if (cell.tier === 'uncommon') {
-        // Find other half
         const otherHalf = newGrid.flat().find(c => c.tileId === cell.tileId && (c.row !== row || c.col !== col));
         if (otherHalf?.isHit) {
           bonusShot = true;
         }
       }
 
-      // Charged bonus shot
       if (isCharged) {
-        // Check if last in row or col
         const rowTiles = newGrid[row].filter(c => c.tileId && !c.isHit);
         const colTiles = newGrid.map(r => r[col]).filter(c => c.tileId && !c.isHit);
         if (rowTiles.length === 0 || colTiles.length === 0) {
@@ -250,6 +434,7 @@ export const useGameLogic = () => {
         }
       }
     } else {
+      playSound(SOUNDS.MISS);
       cell.isMiss = true;
     }
 
@@ -261,7 +446,10 @@ export const useGameLogic = () => {
       }
 
       const nextPlayer = bonusShot ? activeId : opponentId;
-      const nextPhase = checkWin(updatedOpponent, prev.winMode) ? 'gameover' : 'battle';
+      const isGameOver = checkWin(updatedOpponent, prev.winMode);
+      const nextPhase = isGameOver ? 'gameover' : 'battle';
+
+      if (isGameOver) playSound(SOUNDS.WIN);
 
       return {
         ...prev,
@@ -282,12 +470,12 @@ export const useGameLogic = () => {
   };
 
   const executeBomb = (word: string, target: { row?: number; col?: number; cell?: { r: number; c: number } }) => {
+    playSound(SOUNDS.BOMB);
     const activeId = gameState.activePlayer;
     const opponentId = activeId === 1 ? 2 : 1;
     const activePlayer = gameState.players[activeId];
     const upperWord = word.toUpperCase();
 
-    // Validate word
     if (!isValidWord(upperWord)) {
       setError('Invalid word');
       return;
@@ -297,16 +485,13 @@ export const useGameLogic = () => {
       return;
     }
 
-    // Check bank
     const bankLetters = activePlayer.bank.map(l => l.letter);
     const wordLetters = upperWord.split('');
     const tempBank = [...bankLetters];
-    const usedIndices: number[] = [];
 
     for (const char of wordLetters) {
       const idx = tempBank.indexOf(char);
       if (idx === -1) {
-        // Check for wildcard
         const wildcardIdx = tempBank.indexOf('★');
         if (wildcardIdx === -1) {
           setError('Missing letters in bank');
@@ -318,12 +503,10 @@ export const useGameLogic = () => {
       }
     }
 
-    // Word is valid and letters are available
     const length = upperWord.length;
     const opponent = gameState.players[opponentId];
     const newGrid = [...opponent.grid.map(r => [...r])];
 
-    // Apply effects
     if (length === 3) { // Spark
       if (target.row !== undefined) {
         const hasTile = newGrid[target.row].some(c => c.tileId);
@@ -338,7 +521,6 @@ export const useGameLogic = () => {
         if (cell.tileId) {
           cell.isHit = true;
           cell.hitsReceived = (cell.hitsReceived || 0) + 1;
-          // Harvest logic simplified for bomb
           const harvested = LETTER_POOL.find(l => l.letter === cell.letter && l.tier === cell.tier);
           if (harvested) {
             setGameState(prev => ({
@@ -394,7 +576,6 @@ export const useGameLogic = () => {
       }
     }
 
-    // Consume letters
     const newBank = [...activePlayer.bank];
     for (const char of wordLetters) {
       const idx = newBank.findIndex(l => l.letter === char);
@@ -408,7 +589,10 @@ export const useGameLogic = () => {
     setGameState(prev => {
       const updatedOpponent = { ...prev.players[opponentId], grid: newGrid };
       const updatedActive = { ...prev.players[activeId], bank: newBank };
-      const nextPhase = checkWin(updatedOpponent, prev.winMode, length) ? 'gameover' : 'battle';
+      const isGameOver = checkWin(updatedOpponent, prev.winMode, length);
+      const nextPhase = isGameOver ? 'gameover' : 'battle';
+
+      if (isGameOver) playSound(SOUNDS.WIN);
 
       return {
         ...prev,
@@ -427,25 +611,57 @@ export const useGameLogic = () => {
     setError(null);
   };
 
-  const checkWin = (opponent: PlayerState, mode: WinMode, lastWordLen: number = 0): boolean => {
-    const tilesRemaining = opponent.grid.flat().filter(c => c.tileId && !c.isHit).length;
-    const tilesDestroyed = opponent.grid.flat().filter(c => c.tileId && c.isHit).length; // This is tricky because tiles have sizes
+  const aiTurn = useCallback(() => {
+    const activeId = gameState.activePlayer;
+    const activePlayer = gameState.players[activeId];
+    if (!activePlayer.isAI || gameState.phase !== 'battle') return;
 
-    // Simplified destruction count: count unique tileIds that have all their cells hit
-    const allTiles = new Set(opponent.grid.flat().filter(c => c.tileId).map(c => c.tileId));
-    const destroyedTiles = Array.from(allTiles).filter(tid => 
-      opponent.grid.flat().filter(c => c.tileId === tid).every(c => c.isHit)
-    );
+    // AI Logic:
+    // 1. Try to cast a word bomb if bank has 3+ letters
+    // 2. Otherwise, fire a random shot
 
-    if (mode === 'classic') {
-      return destroyedTiles.length >= 15;
-    } else if (mode === 'lexicon') {
-      return lastWordLen >= 8;
-    } else if (mode === 'hybrid') {
-      return destroyedTiles.length >= 10 || lastWordLen >= 7;
+    setTimeout(() => {
+      if (activePlayer.bank.length >= 3) {
+        // Find a word from bank
+        const bankLetters = activePlayer.bank.map(l => l.letter);
+        // Simple AI: just pick 3-5 random letters that form a "word" (since isValidWord is permissive)
+        const wordLen = Math.min(activePlayer.bank.length, 5);
+        const word = bankLetters.slice(0, wordLen).join('');
+        
+        // Pick a target
+        const target: any = {};
+        if (wordLen === 3 || wordLen === 5) {
+          target.row = Math.floor(Math.random() * GRID_SIZE);
+        } else if (wordLen === 4) {
+          target.cell = { r: Math.floor(Math.random() * GRID_SIZE), c: Math.floor(Math.random() * GRID_SIZE) };
+        }
+        
+        executeBomb(word, target);
+      } else {
+        // Random fire
+        const opponentId = activeId === 1 ? 2 : 1;
+        const opponent = gameState.players[opponentId];
+        const untargeted = opponent.grid.flat().filter(c => !c.isHit && !c.isMiss);
+        if (untargeted.length > 0) {
+          const target = untargeted[Math.floor(Math.random() * untargeted.length)];
+          fire(target.row, target.col);
+        }
+      }
+    }, 1000);
+  }, [gameState, fire, executeBomb]);
+
+  useEffect(() => {
+    if (gameState.phase === 'battle' && gameState.players[gameState.activePlayer].isAI) {
+      aiTurn();
     }
-    return false;
-  };
+  }, [gameState.activePlayer, gameState.phase, aiTurn]);
+
+  useEffect(() => {
+    if (gameState.phase === 'setup' && gameState.players[gameState.activePlayer].isAI) {
+      autoPlace(gameState.activePlayer);
+      setTimeout(() => finalizeSetup(gameState.activePlayer), 1000);
+    }
+  }, [gameState.activePlayer, gameState.phase]);
 
   return {
     gameState,
@@ -457,5 +673,10 @@ export const useGameLogic = () => {
     executeBomb,
     resetGame,
     setWinMode,
+    updatePlayerName,
+    toggleAI,
+    undoPlacement,
+    autoPlace,
   };
 };
+

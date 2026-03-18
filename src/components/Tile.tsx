@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { LetterTile, TIERS } from '../constants';
+import { Tooltip } from './Tooltip';
 
 interface TileProps {
   tile: LetterTile;
@@ -14,7 +15,7 @@ interface TileProps {
 export const Tile: React.FC<TileProps> = ({ tile, isHit, isRevealed, onClick, className, showPoints = true }) => {
   const tierStyle = TIERS[tile.tier];
 
-  return (
+  const content = (
     <motion.div
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
@@ -42,4 +43,14 @@ export const Tile: React.FC<TileProps> = ({ tile, isHit, isRevealed, onClick, cl
       )}
     </motion.div>
   );
+
+  if (tile.description) {
+    return (
+      <Tooltip content={tile.description} title={tile.isSpecial ? `${tile.isSpecial.toUpperCase()} TILE` : 'WILDCARD'}>
+        {content}
+      </Tooltip>
+    );
+  }
+
+  return content;
 };

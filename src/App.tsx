@@ -18,6 +18,10 @@ export default function App() {
     executeBomb,
     resetGame,
     setWinMode,
+    updatePlayerName,
+    toggleAI,
+    undoPlacement,
+    autoPlace,
   } = useGameLogic();
 
   const [showMenu, setShowMenu] = useState(true);
@@ -63,7 +67,37 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 w-full">
+          <div className="flex flex-col gap-6 w-full">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest px-1">Player 1 Name</label>
+                <input 
+                  type="text" 
+                  value={gameState.players[1].name}
+                  onChange={(e) => updatePlayerName(1, e.target.value)}
+                  className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm font-serif font-bold text-white focus:border-yellow-500/50 focus:outline-none transition-colors"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center px-1">
+                  <label className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Player 2 Name</label>
+                  <button 
+                    onClick={() => toggleAI(2)}
+                    className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border transition-all ${gameState.players[2].isAI ? 'bg-yellow-500 text-slate-950 border-yellow-500' : 'text-slate-500 border-slate-800 hover:border-slate-600'}`}
+                  >
+                    {gameState.players[2].isAI ? 'AI ACTIVE' : 'HUMAN'}
+                  </button>
+                </div>
+                <input 
+                  type="text" 
+                  value={gameState.players[2].name}
+                  onChange={(e) => updatePlayerName(2, e.target.value)}
+                  disabled={gameState.players[2].isAI}
+                  className={`bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm font-serif font-bold text-white focus:border-yellow-500/50 focus:outline-none transition-colors ${gameState.players[2].isAI ? 'opacity-50 cursor-not-allowed' : ''}`}
+                />
+              </div>
+            </div>
+
             <button
               onClick={handleStartGame}
               className="group relative w-full p-6 bg-yellow-500 hover:bg-yellow-400 text-slate-950 rounded-2xl font-serif font-bold text-2xl transition-all flex items-center justify-center gap-3 shadow-lg shadow-yellow-500/20 overflow-hidden"
@@ -127,8 +161,10 @@ export default function App() {
           >
             <PlacementScreen
               player={gameState.players[gameState.activePlayer]}
-              onPlace={placeTile}
+              onPlace={(r, c, t, o) => placeTile(gameState.activePlayer, r, c, t, o)}
               onFinalize={() => finalizeSetup(gameState.activePlayer)}
+              onUndo={undoPlacement}
+              onAutoPlace={autoPlace}
               error={error}
             />
           </motion.div>

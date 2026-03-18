@@ -24,6 +24,8 @@ export interface PlayerState {
   bank: LetterTile[];
   tilesPlaced: number;
   isReady: boolean;
+  isAI?: boolean;
+  placementHistory?: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[];
 }
 
 export interface GameState {

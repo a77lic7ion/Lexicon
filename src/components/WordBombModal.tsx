@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { LetterTile, BOMB_EFFECTS } from '../constants';
 import { isValidWord } from '../utils/dictionary';
 import { X, Zap, Target, Eye, Wind, Skull, Trash2 } from 'lucide-react';
+import { Tooltip } from './Tooltip';
 
 interface WordBombModalProps {
   isOpen: boolean;
@@ -113,23 +114,25 @@ export const WordBombModal: React.FC<WordBombModalProps> = ({ isOpen, onClose, b
           </div>
 
           {effect && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col gap-2"
-            >
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-serif font-bold text-yellow-500 uppercase tracking-widest">
-                  {effect.name} (Tier {wordLen})
-                </span>
-                <span className="text-[10px] font-mono font-bold text-slate-600">
-                  {wordLen} LETTERS SPENT
-                </span>
-              </div>
-              <p className="text-xs font-sans text-slate-400">
-                {effect.description}
-              </p>
-            </motion.div>
+            <Tooltip content={effect.description} title={`${effect.name.toUpperCase()} EFFECT`}>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col gap-2 w-full"
+              >
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-serif font-bold text-yellow-500 uppercase tracking-widest">
+                    {effect.name} (Tier {wordLen})
+                  </span>
+                  <span className="text-[10px] font-mono font-bold text-slate-600">
+                    {wordLen} LETTERS SPENT
+                  </span>
+                </div>
+                <p className="text-xs font-sans text-slate-400">
+                  {effect.description}
+                </p>
+              </motion.div>
+            </Tooltip>
           )}
 
           {targetType !== 'none' && (

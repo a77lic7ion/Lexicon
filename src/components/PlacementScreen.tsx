@@ -9,10 +9,19 @@ interface PlacementScreenProps {
   player: { id: 1 | 2; name: string; grid: any; tilesPlaced: number };
   onPlace: (row: number, col: number, tile: LetterTile, orientation: 'h' | 'v') => void;
   onFinalize: () => void;
+  onUndo: (playerId: 1 | 2) => void;
+  onAutoPlace: (playerId: 1 | 2) => void;
   error: string | null;
 }
 
-export const PlacementScreen: React.FC<PlacementScreenProps> = ({ player, onPlace, onFinalize, error }) => {
+export const PlacementScreen: React.FC<PlacementScreenProps> = ({ 
+  player, 
+  onPlace, 
+  onFinalize, 
+  onUndo,
+  onAutoPlace,
+  error 
+}) => {
   const [selectedTile, setSelectedTile] = useState<LetterTile | null>(null);
   const [orientation, setOrientation] = useState<'h' | 'v'>('h');
 
@@ -59,6 +68,25 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({ player, onPlac
             {error}
           </motion.div>
         )}
+
+        <div className="flex gap-4">
+          <button
+            onClick={() => onUndo(player.id)}
+            disabled={player.tilesPlaced === 0}
+            className="flex-1 p-4 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-mono font-bold text-slate-300 transition-all flex items-center justify-center gap-2 border border-slate-700"
+          >
+            <Trash2 className="w-5 h-5" />
+            UNDO
+          </button>
+          <button
+            onClick={() => onAutoPlace(player.id)}
+            disabled={player.tilesPlaced === 15}
+            className="flex-1 p-4 bg-yellow-500/10 hover:bg-yellow-500/20 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-mono font-bold text-yellow-500 transition-all flex items-center justify-center gap-2 border border-yellow-500/20"
+          >
+            <RotateCw className="w-5 h-5" />
+            RANDOM
+          </button>
+        </div>
 
         <button
           onClick={onFinalize}
