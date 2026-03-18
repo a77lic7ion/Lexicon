@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Grid } from './Grid';
 import { LetterBank } from './LetterBank';
 import { WordBombModal } from './WordBombModal';
+import { GameHistoryModal } from './GameHistoryModal';
 import { Zap, Target, History, Settings, Info, Trophy, LogOut, RefreshCw, Users } from 'lucide-react';
 import { GameState } from '../types';
 
@@ -18,6 +19,7 @@ interface BattleScreenProps {
 
 export const BattleScreen: React.FC<BattleScreenProps> = ({ gameState, onFire, onExecuteBomb, onQuit, onRestart, message, error }) => {
   const [isBombModalOpen, setIsBombModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   
   const isAIGame = gameState.players[2].isAI;
   const [showPassDevice, setShowPassDevice] = useState(false);
@@ -102,7 +104,11 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gameState, onFire, o
             <LogOut className="w-5 h-5" />
             QUIT
           </button>
-          <button className="p-3 bg-slate-900 hover:bg-slate-800 rounded-2xl border border-slate-800 transition-colors">
+          <button 
+            onClick={() => setIsHistoryModalOpen(true)}
+            className="p-3 bg-slate-900 hover:bg-slate-800 rounded-2xl border border-slate-800 transition-colors"
+            title="Game History"
+          >
             <History className="w-6 h-6 text-slate-400" />
           </button>
           <button className="p-3 bg-slate-900 hover:bg-slate-800 rounded-2xl border border-slate-800 transition-colors">
@@ -206,6 +212,12 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gameState, onFire, o
         bank={viewingPlayer.bank}
         onExecute={onExecuteBomb}
         playedWords={gameState.playedWords}
+      />
+
+      <GameHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        history={gameState.history}
       />
     </div>
   );

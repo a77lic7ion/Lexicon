@@ -28,6 +28,17 @@ export interface PlayerState {
   placementHistory?: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[];
 }
 
+export interface HistoryEvent {
+  id: string;
+  turn: number;
+  playerId: 1 | 2;
+  playerName: string;
+  type: 'fire' | 'bomb';
+  action: string;
+  result: string;
+  timestamp: number;
+}
+
 export interface GameState {
   phase: GamePhase;
   winMode: WinMode;
@@ -37,6 +48,7 @@ export interface GameState {
     2: PlayerState;
   };
   playedWords: string[];
+  history: HistoryEvent[];
   winner: 1 | 2 | null;
   turnCount: number;
 }

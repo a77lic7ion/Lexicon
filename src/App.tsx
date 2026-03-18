@@ -158,16 +158,26 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="w-full h-full flex items-center justify-center min-h-screen"
           >
-            <PlacementScreen
-              player={gameState.players[gameState.activePlayer]}
-              onPlace={(r, c, t, o) => placeTile(gameState.activePlayer, r, c, t, o)}
-              onFinalize={() => finalizeSetup(gameState.activePlayer)}
-              onUndo={undoPlacement}
-              onAutoPlace={autoPlace}
-              onQuit={() => setShowMenu(true)}
-              error={error}
-            />
+            {gameState.players[gameState.activePlayer].isAI ? (
+              <div className="flex flex-col items-center gap-6">
+                <div className="w-16 h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin" />
+                <h2 className="text-2xl font-serif font-bold text-white">
+                  {gameState.players[gameState.activePlayer].name} is placing tiles...
+                </h2>
+              </div>
+            ) : (
+              <PlacementScreen
+                player={gameState.players[gameState.activePlayer]}
+                onPlace={(r, c, t, o) => placeTile(gameState.activePlayer, r, c, t, o)}
+                onFinalize={() => finalizeSetup(gameState.activePlayer)}
+                onUndo={undoPlacement}
+                onAutoPlace={autoPlace}
+                onQuit={() => setShowMenu(true)}
+                error={error}
+              />
+            )}
           </motion.div>
         )}
 

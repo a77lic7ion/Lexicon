@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { GameState, GamePhase, WinMode, CellState, PlayerState } from '../types';
+import { GameState, GamePhase, WinMode, CellState, PlayerState, HistoryEvent } from '../types';
 import { LETTER_POOL, SPECIAL_TILES, LetterTile, SOUNDS } from '../constants';
 import { COMMON_WORDS, isValidWord } from '../utils/dictionary';
 
@@ -52,6 +52,7 @@ export const useGameLogic = () => {
       2: initialPlayerState(2),
     },
     playedWords: [],
+    history: [],
     winner: null,
     turnCount: 0,
   });
@@ -66,9 +67,10 @@ export const useGameLogic = () => {
       activePlayer: 1,
       players: {
         1: { ...initialPlayerState(1), name: prev.players[1].name },
-        2: { ...initialPlayerState(2), name: prev.players[2].name },
+        2: { ...initialPlayerState(2), name: prev.players[2].name, isAI: prev.players[2].isAI },
       },
       playedWords: [],
+      history: [],
       winner: null,
       turnCount: 0,
     }));
@@ -438,17 +440,23 @@ export const useGameLogic = () => {
       cell.isMiss = true;
     }
 
+    let resultMsg = "";
+    if (harvestedLetter) {
+      resultMsg = `HIT! Harvested '${harvestedLetter.letter}' from ${opponent.name}`;
+    } else if (hit) {
+      resultMsg = "HIT!";
+    } else {
+      resultMsg = "MISS";
+    }
+    setMessage(resultMsg);
+    setError(null);
+
     setGameState(prev => {
       const updatedOpponent = { ...prev.players[opponentId], grid: newGrid };
       const updatedActive = { ...prev.players[activeId] };
       if (harvestedLetter) {
         const letterWithId = { ...harvestedLetter, uniqueId: Math.random().toString(36).substring(7) };
         updatedActive.bank = [...updatedActive.bank, letterWithId];
-        setMessage(`HIT! Harvested '${harvestedLetter.letter}' from ${updatedOpponent.name}`);
-      } else if (hit) {
-        setMessage("HIT!");
-      } else {
-        setMessage("MISS");
       }
 
       const nextPlayer = bonusShot ? activeId : opponentId;
@@ -457,10 +465,22 @@ export const useGameLogic = () => {
 
       if (isGameOver) playSound(SOUNDS.WIN);
 
+      const historyEvent: HistoryEvent = {
+        id: Math.random().toString(36).substring(7),
+        turn: prev.turnCount + 1,
+        playerId: activeId,
+        playerName: prev.players[activeId].name,
+        type: 'fire',
+        action: `Fired at ${String.fromCharCode(65 + col)}${row + 1}`,
+        result: resultMsg,
+        timestamp: Date.now(),
+      };
+
       return {
         ...prev,
         phase: nextPhase,
         activePlayer: nextPlayer,
+        history: [historyEvent, ...prev.history],
         players: {
           ...prev.players,
           [opponentId]: updatedOpponent,
@@ -470,9 +490,6 @@ export const useGameLogic = () => {
         turnCount: prev.turnCount + 1,
       };
     });
-
-    setMessage(hit ? 'HIT!' : 'MISS!');
-    setError(null);
   };
 
   const executeBomb = (word: string, target: { row?: number; col?: number; cell?: { r: number; c: number } }) => {
@@ -593,11 +610,29 @@ export const useGameLogic = () => {
 
       if (isGameOver) playSound(SOUNDS.WIN);
 
+      let targetStr = '';
+      if (length === 7) targetStr = `Opponent's Bank`;
+      else if (target.row !== undefined) targetStr = `Row ${target.row + 1}`;
+      else if (target.col !== undefined) targetStr = `Col ${String.fromCharCode(65 + target.col)}`;
+      else if (target.cell) targetStr = `${String.fromCharCode(65 + target.cell.c)}${target.cell.r + 1}`;
+
+      const historyEvent: HistoryEvent = {
+        id: Math.random().toString(36).substring(7),
+        turn: prev.turnCount + 1,
+        playerId: activeId,
+        playerName: prev.players[activeId].name,
+        type: 'bomb',
+        action: `Cast ${upperWord} at ${targetStr}`,
+        result: `Consumed ${length} letters`,
+        timestamp: Date.now(),
+      };
+
       return {
         ...prev,
         phase: nextPhase,
         activePlayer: opponentId,
         playedWords: [...prev.playedWords, upperWord],
+        history: [historyEvent, ...prev.history],
         players: {
           ...prev.players,
           [opponentId]: updatedOpponent,
