@@ -1,0 +1,5 @@
+{
+  "name": "Lexicon: Word-Harvesting Battle",
+  "description": "A 2-player turn-based strategy game combining Battleships deduction with Scrabble wordplay. Harvest letters from the enemy grid to cast powerful Word Bombs.",
+  "requestFramePermissions": []
+}
