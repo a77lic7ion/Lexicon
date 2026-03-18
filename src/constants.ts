@@ -55,3 +55,5 @@ export const SOUNDS = {
   BOMB: 'https://assets.mixkit.co/active_storage/sfx/2580/2580-preview.mp3',
   WIN: 'https://assets.mixkit.co/active_storage/sfx/2582/2582-preview.mp3',
 };
+
+export const BGM_URL = 'https://assets.mixkit.co/active_storage/music/1760/1760-preview.mp3';

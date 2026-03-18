@@ -1,4 +1,5 @@
-import { LetterTile } from './constants';
+import type { LetterTile } from './constants';
+export type { LetterTile };
 
 export type GamePhase = 'setup' | 'battle' | 'gameover';
 export type WinMode = 'classic' | 'lexicon' | 'hybrid';

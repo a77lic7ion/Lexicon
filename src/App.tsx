@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGameLogic } from './hooks/useGameLogic';
 import { PlacementScreen } from './components/PlacementScreen';
 import { BattleScreen } from './components/BattleScreen';
@@ -6,7 +6,8 @@ import { GameOverScreen } from './components/GameOverScreen';
 import { TutorialScreen } from './components/TutorialScreen';
 import { SettingsModal } from './components/SettingsModal';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sword, BookOpen, Settings, Play, Info } from 'lucide-react';
+import { Sword, BookOpen, Settings, Play, Info, Volume2, VolumeX } from 'lucide-react';
+import { BGM_URL } from './constants';
 
 export default function App() {
   const {
@@ -27,12 +28,27 @@ export default function App() {
     toggleSound,
     isSoundEnabled,
     skipTurn,
+    reorderBank,
   } = useGameLogic();
 
   const [showMenu, setShowMenu] = useState(true);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showSetupPass, setShowSetupPass] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const bgmRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (isSoundEnabled) {
+      if (!bgmRef.current) {
+        bgmRef.current = new Audio(BGM_URL);
+        bgmRef.current.loop = true;
+        bgmRef.current.volume = 0.3;
+      }
+      bgmRef.current.play().catch(e => console.log("BGM play failed:", e));
+    } else {
+      bgmRef.current?.pause();
+    }
+  }, [isSoundEnabled]);
 
   const handleStartGame = () => {
     setShowMenu(false);
@@ -260,6 +276,7 @@ export default function App() {
               isSoundEnabled={isSoundEnabled}
               onSetDifficulty={setDifficulty}
               onSkipTurn={skipTurn}
+              onReorderBank={reorderBank}
             />
           </motion.div>
         )}

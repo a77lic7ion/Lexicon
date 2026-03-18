@@ -670,6 +670,16 @@ export const useGameLogic = () => {
     setError(null);
   };
 
+  const reorderBank = (player: 1 | 2, newBank: LetterTile[]) => {
+    setGameState(prev => ({
+      ...prev,
+      players: {
+        ...prev.players,
+        [player]: { ...prev.players[player], bank: newBank }
+      }
+    }));
+  };
+
   const findBestWord = (bank: LetterTile[], playedWords: string[]): string | null => {
     const letters = bank.map(l => l.letter.toUpperCase()).join('');
     // Simple greedy search for longest word in COMMON_WORDS that can be formed
@@ -908,6 +918,7 @@ export const useGameLogic = () => {
     toggleSound,
     isSoundEnabled,
     skipTurn,
+    reorderBank,
   };
 };
 

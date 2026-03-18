@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Grid } from './Grid';
 import { UnifiedGrid } from './UnifiedGrid';
 import { LetterBank } from './LetterBank';
-import { WordBombModal } from './WordBombModal';
+import { WordBombPanel } from './WordBombPanel';
 import { GameHistoryModal } from './GameHistoryModal';
 import { SettingsModal } from './SettingsModal';
 import { Zap, Target, History, Settings, Info, Trophy, LogOut, RefreshCw, Users, Shield, LayoutGrid, Layout } from 'lucide-react';
-import { GameState, Difficulty } from '../types';
+import { GameState, Difficulty, LetterTile } from '../types';
 
 interface BattleScreenProps {
   gameState: GameState;
@@ -21,6 +21,7 @@ interface BattleScreenProps {
   isSoundEnabled: boolean;
   onSetDifficulty: (id: 1 | 2, difficulty: Difficulty) => void;
   onSkipTurn: () => void;
+  onReorderBank: (id: 1 | 2, newBank: LetterTile[]) => void;
 }
 
 export const BattleScreen: React.FC<BattleScreenProps> = ({ 
@@ -34,7 +35,8 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   onToggleSound, 
   isSoundEnabled,
   onSetDifficulty,
-  onSkipTurn
+  onSkipTurn,
+  onReorderBank
 }) => {
   const [isBombModalOpen, setIsBombModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -284,10 +286,14 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
               </div>
             </div>
             
-            <LetterBank bank={viewingPlayer.bank} title="Available Letters" />
+            <LetterBank 
+              bank={viewingPlayer.bank} 
+              title="Available Letters" 
+              onReorder={(newBank) => onReorderBank(viewingPlayerId, newBank)}
+            />
             
             <button
-              onClick={() => setIsBombModalOpen(true)}
+              onClick={() => setIsBombModalOpen(!isBombModalOpen)}
               disabled={viewingPlayer.bank.length < 3 || !isMyTurn}
               className={`
                 w-full p-6 rounded-2xl font-serif font-bold text-2xl transition-all flex items-center justify-center gap-3 relative overflow-hidden group
@@ -298,8 +304,19 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
             >
               <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 skew-x-[-20deg]" />
               <Zap className={`w-8 h-8 ${viewingPlayer.bank.length >= 3 && isMyTurn ? 'fill-current' : ''}`} />
-              WORD BOMB
+              {isBombModalOpen ? 'CLOSE BOMB' : 'WORD BOMB'}
             </button>
+
+            <AnimatePresence>
+              {isBombModalOpen && (
+                <WordBombPanel
+                  bank={viewingPlayer.bank}
+                  onExecute={onExecuteBomb}
+                  playedWords={gameState.playedWords}
+                  onClose={() => setIsBombModalOpen(false)}
+                />
+              )}
+            </AnimatePresence>
 
             <button
               onClick={onSkipTurn}
@@ -342,14 +359,6 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
           )}
         </div>
       </div>
-
-      <WordBombModal 
-        isOpen={isBombModalOpen}
-        onClose={() => setIsBombModalOpen(false)}
-        bank={viewingPlayer.bank}
-        onExecute={onExecuteBomb}
-        playedWords={gameState.playedWords}
-      />
 
       <GameHistoryModal
         isOpen={isHistoryModalOpen}
