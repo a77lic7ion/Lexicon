@@ -2,6 +2,7 @@ import { LetterTile } from './constants';
 
 export type GamePhase = 'setup' | 'battle' | 'gameover';
 export type WinMode = 'classic' | 'lexicon' | 'hybrid';
+export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export interface CellState {
   row: number;
@@ -25,6 +26,7 @@ export interface PlayerState {
   tilesPlaced: number;
   isReady: boolean;
   isAI?: boolean;
+  difficulty?: Difficulty;
   placementHistory?: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[];
 }
 

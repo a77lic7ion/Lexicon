@@ -26,10 +26,16 @@ export const LetterBank: React.FC<LetterBankProps> = ({ bank, onTileClick, title
           {bank.map((tile, idx) => (
             <motion.div
               key={tile.uniqueId || `${tile.id}-${idx}`}
-              initial={{ scale: 0, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0, opacity: 0, y: -20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              layout
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ 
+                type: 'spring', 
+                stiffness: 200, 
+                damping: 25,
+                layout: { duration: 0.3 }
+              }}
             >
               <Tile 
                 tile={tile} 

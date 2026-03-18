@@ -1,15 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
-import { GameState, GamePhase, WinMode, CellState, PlayerState, HistoryEvent } from '../types';
+import { GameState, GamePhase, WinMode, CellState, PlayerState, HistoryEvent, Difficulty } from '../types';
 import { LETTER_POOL, SPECIAL_TILES, LetterTile, SOUNDS } from '../constants';
 import { COMMON_WORDS, isValidWord } from '../utils/dictionary';
 
 const GRID_SIZE = 10;
-
-const playSound = (url: string) => {
-  const audio = new Audio(url);
-  audio.volume = 0.4;
-  audio.play().catch(() => {}); // Ignore errors if browser blocks autoplay
-};
 
 const createEmptyGrid = (): CellState[][] => {
   const grid: CellState[][] = [];
@@ -39,10 +33,12 @@ const initialPlayerState = (id: 1 | 2): PlayerState => ({
   tilesPlaced: 0,
   isReady: false,
   isAI: false,
+  difficulty: 'medium',
   placementHistory: [],
 });
 
 export const useGameLogic = () => {
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [gameState, setGameState] = useState<GameState>({
     phase: 'setup',
     winMode: 'hybrid',
@@ -56,6 +52,15 @@ export const useGameLogic = () => {
     winner: null,
     turnCount: 0,
   });
+
+  const playSound = useCallback((url: string) => {
+    if (!isSoundEnabled) return;
+    const audio = new Audio(url);
+    audio.volume = 0.4;
+    audio.play().catch(() => {});
+  }, [isSoundEnabled]);
+
+  const toggleSound = () => setIsSoundEnabled(prev => !prev);
 
   const [message, setMessage] = useState<string>('Place your tiles.');
   const [error, setError] = useState<string | null>(null);
@@ -97,7 +102,17 @@ export const useGameLogic = () => {
       ...prev,
       players: {
         ...prev.players,
-        [id]: { ...prev.players[id], isAI: !prev.players[id].isAI }
+        [id]: { ...prev.players[id], isAI: !prev.players[id].isAI, difficulty: 'medium' }
+      }
+    }));
+  };
+
+  const setDifficulty = (id: 1 | 2, difficulty: Difficulty) => {
+    setGameState(prev => ({
+      ...prev,
+      players: {
+        ...prev.players,
+        [id]: { ...prev.players[id], difficulty }
       }
     }));
   };
@@ -141,95 +156,90 @@ export const useGameLogic = () => {
   };
 
   const autoPlace = (player: 1 | 2) => {
-    const playerState = gameState.players[player];
-    let currentGrid = [...playerState.grid.map(r => [...r])];
+    let currentGrid = createEmptyGrid();
     let placedCount = 0;
-    const history: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[] = [];
-
-    // Reset grid first
-    currentGrid = createEmptyGrid();
-
+    let history: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[] = [];
+    
     const pool = [...LETTER_POOL];
     const specials = [...SPECIAL_TILES];
     
-    // Intelligent-ish placement:
-    // 1. Place 15 tiles
-    // 2. Mix of tiers
-    // 3. Respect buffer
-    
     const toPlace: LetterTile[] = [];
-    // 3 Vowels (Common)
     const vowels = pool.filter(t => ['A', 'E', 'I', 'O', 'U'].includes(t.letter)).slice(0, 3);
     toPlace.push(...vowels);
-    // 2 Rare
     toPlace.push(...pool.filter(t => t.tier === 'rare').slice(0, 2));
-    // 1 Wildcard
     toPlace.push(pool.find(t => t.tier === 'wildcard')!);
-    // 4 Uncommon (1x2)
     toPlace.push(...pool.filter(t => t.tier === 'uncommon').slice(0, 4));
-    // 4 Special
     toPlace.push(...specials);
-    // Fill rest with common
     const remaining = 15 - toPlace.length;
     toPlace.push(...pool.filter(t => t.tier === 'common' && !toPlace.includes(t)).slice(0, remaining));
 
-    for (const tile of toPlace) {
-      let placed = false;
-      let attempts = 0;
-      while (!placed && attempts < 100) {
-        attempts++;
-        const r = Math.floor(Math.random() * GRID_SIZE);
-        const c = Math.floor(Math.random() * GRID_SIZE);
-        const orientation = Math.random() > 0.5 ? 'h' : 'v';
+    let globalAttempts = 0;
+    while (placedCount < 15 && globalAttempts < 5) {
+      globalAttempts++;
+      currentGrid = createEmptyGrid();
+      placedCount = 0;
+      history = [];
 
-        // Check bounds and overlap
-        const cells: { r: number; c: number }[] = [];
-        let valid = true;
-        for (let i = 0; i < tile.size; i++) {
-          const nr = orientation === 'v' ? r + i : r;
-          const nc = orientation === 'h' ? c + i : c;
-          if (nr >= GRID_SIZE || nc >= GRID_SIZE || currentGrid[nr][nc].tileId) {
-            valid = false;
-            break;
-          }
-          cells.push({ r: nr, c: nc });
-        }
+      for (const tile of toPlace) {
+        let placed = false;
+        let attempts = 0;
+        while (!placed && attempts < 50) {
+          attempts++;
+          const r = Math.floor(Math.random() * GRID_SIZE);
+          const c = Math.floor(Math.random() * GRID_SIZE);
+          const orientation = Math.random() > 0.5 ? 'h' : 'v';
 
-        if (valid) {
-          // Check buffer
-          for (const cell of cells) {
-            for (let dr = -1; dr <= 1; dr++) {
-              for (let dc = -1; dc <= 1; dc++) {
-                const nr = cell.r + dr;
-                const nc = cell.c + dc;
-                if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
-                  if (currentGrid[nr][nc].tileId) {
-                    valid = false;
-                    break;
-                  }
-                }
-              }
-              if (!valid) break;
+          const cells: { r: number; c: number }[] = [];
+          let valid = true;
+          for (let i = 0; i < tile.size; i++) {
+            const nr = orientation === 'v' ? r + i : r;
+            const nc = orientation === 'h' ? c + i : c;
+            if (nr >= GRID_SIZE || nc >= GRID_SIZE || currentGrid[nr][nc].tileId) {
+              valid = false;
+              break;
             }
-            if (!valid) break;
+            cells.push({ r: nr, c: nc });
           }
-        }
 
-        if (valid) {
-          cells.forEach(cell => {
-            currentGrid[cell.r][cell.c] = {
-              ...currentGrid[cell.r][cell.c],
-              tileId: tile.id,
-              letter: tile.letter,
-              tier: tile.tier,
-              isSpecial: tile.isSpecial,
-              hitsRequired: tile.isSpecial === 'vault' ? 2 : 1,
-              hitsReceived: 0,
-            };
-          });
-          history.push({ row: r, col: c, tileId: tile.id, size: tile.size, orientation });
-          placedCount++;
-          placed = true;
+          if (valid) {
+            // Buffer check - only enforce strictly on first few global attempts
+            const bufferSize = globalAttempts < 3 ? 1 : 0;
+            if (bufferSize > 0) {
+              for (const cell of cells) {
+                for (let dr = -bufferSize; dr <= bufferSize; dr++) {
+                  for (let dc = -bufferSize; dc <= bufferSize; dc++) {
+                    const nr = cell.r + dr;
+                    const nc = cell.c + dc;
+                    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
+                      if (currentGrid[nr][nc].tileId) {
+                        valid = false;
+                        break;
+                      }
+                    }
+                  }
+                  if (!valid) break;
+                }
+                if (!valid) break;
+              }
+            }
+          }
+
+          if (valid) {
+            cells.forEach(cell => {
+              currentGrid[cell.r][cell.c] = {
+                ...currentGrid[cell.r][cell.c],
+                tileId: tile.id,
+                letter: tile.letter,
+                tier: tile.tier,
+                isSpecial: tile.isSpecial,
+                hitsRequired: tile.isSpecial === 'vault' ? 2 : 1,
+                hitsReceived: 0,
+              };
+            });
+            history.push({ row: r, col: c, tileId: tile.id, size: tile.size, orientation });
+            placedCount++;
+            placed = true;
+          }
         }
       }
     }
@@ -246,7 +256,7 @@ export const useGameLogic = () => {
         },
       },
     }));
-    playSound(SOUNDS.PLACE);
+    if (placedCount > 0) playSound(SOUNDS.PLACE);
   };
 
 
@@ -645,44 +655,96 @@ export const useGameLogic = () => {
     setError(null);
   };
 
+  const findBestWord = (bank: LetterTile[]): string | null => {
+    const letters = bank.map(l => l.letter.toUpperCase()).join('');
+    // Simple greedy search for longest word in COMMON_WORDS that can be formed
+    const sortedWords = Array.from(COMMON_WORDS).sort((a, b) => b.length - a.length);
+    
+    for (const word of sortedWords) {
+      if (word.length > letters.length) continue;
+      let tempLetters = letters;
+      let canForm = true;
+      for (const char of word) {
+        const index = tempLetters.indexOf(char);
+        if (index === -1) {
+          canForm = false;
+          break;
+        }
+        tempLetters = tempLetters.slice(0, index) + tempLetters.slice(index + 1);
+      }
+      if (canForm) return word;
+    }
+    
+    // Fallback: just pick first 3-5 letters if no common word found
+    if (letters.length >= 3) {
+      return letters.slice(0, Math.min(letters.length, 5));
+    }
+    return null;
+  };
+
   const aiTurn = useCallback(() => {
     const activeId = gameState.activePlayer;
     const activePlayer = gameState.players[activeId];
     if (!activePlayer.isAI || gameState.phase !== 'battle') return;
 
-    // AI Logic:
-    // 1. Try to cast a word bomb if bank has 3+ letters
-    // 2. Otherwise, fire a random shot
+    const difficulty = activePlayer.difficulty || 'medium';
+    const bombThreshold = difficulty === 'easy' ? 5 : difficulty === 'medium' ? 4 : 3;
+    const delay = difficulty === 'easy' ? 1200 : difficulty === 'medium' ? 800 : 400;
 
-    setTimeout(() => {
-      if (activePlayer.bank.length >= 3) {
-        // Find a word from bank
-        const bankLetters = activePlayer.bank.map(l => l.letter);
-        // Simple AI: just pick 3-5 random letters that form a "word" (since isValidWord is permissive)
-        const wordLen = Math.min(activePlayer.bank.length, 5);
-        const word = bankLetters.slice(0, wordLen).join('');
-        
-        // Pick a target
-        const target: any = {};
-        if (wordLen === 3 || wordLen === 5) {
-          target.row = Math.floor(Math.random() * GRID_SIZE);
-        } else if (wordLen === 4) {
-          target.cell = { r: Math.floor(Math.random() * GRID_SIZE), c: Math.floor(Math.random() * GRID_SIZE) };
-        }
-        
-        executeBomb(word, target);
-      } else {
-        // Random fire
-        const opponentId = activeId === 1 ? 2 : 1;
-        const opponent = gameState.players[opponentId];
+    const timer = setTimeout(() => {
+      setGameState(current => {
+        const currActiveId = current.activePlayer;
+        const currActivePlayer = current.players[currActiveId];
+        if (!currActivePlayer.isAI || current.phase !== 'battle') return current;
+
+        const opponentId = currActiveId === 1 ? 2 : 1;
+        const opponent = current.players[opponentId];
         const untargeted = opponent.grid.flat().filter(c => !c.isHit && !c.isMiss);
-        if (untargeted.length > 0) {
-          const target = untargeted[Math.floor(Math.random() * untargeted.length)];
-          fire(target.row, target.col);
+        const revealed = untargeted.filter(c => c.isRevealed);
+
+        // 1. Strategic Bombing
+        if (currActivePlayer.bank.length >= bombThreshold) {
+          const word = findBestWord(currActivePlayer.bank);
+          if (word) {
+            const wordLen = word.length;
+            const target: any = {};
+            
+            // Strategic targeting for bombs
+            if (wordLen === 3 || wordLen === 5) {
+              // Row/Col bomb - target row with revealed tiles
+              const revealedRows = Array.from(new Set(revealed.map(c => c.row)));
+              target.row = revealedRows.length > 0 ? revealedRows[0] : Math.floor(Math.random() * GRID_SIZE);
+            } else if (wordLen === 4) {
+              // Cell bomb - target revealed cell
+              if (revealed.length > 0) {
+                target.cell = { r: revealed[0].row, c: revealed[0].col };
+              } else {
+                const randomTarget = untargeted[Math.floor(Math.random() * untargeted.length)];
+                target.cell = { r: randomTarget.row, c: randomTarget.col };
+              }
+            }
+            
+            setTimeout(() => executeBomb(word, target), 0);
+            return current;
+          }
         }
-      }
-    }, 1000);
-  }, [gameState, fire, executeBomb]);
+
+        // 2. Strategic Firing
+        if (untargeted.length > 0) {
+          let target;
+          if (difficulty !== 'easy' && revealed.length > 0) {
+            target = revealed[0];
+          } else {
+            target = untargeted[Math.floor(Math.random() * untargeted.length)];
+          }
+          setTimeout(() => fire(target.row, target.col), 0);
+        }
+        
+        return current;
+      });
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [gameState.phase, gameState.activePlayer, fire, executeBomb]);
 
   useEffect(() => {
     if (gameState.phase === 'battle' && gameState.players[gameState.activePlayer].isAI) {
@@ -690,10 +752,125 @@ export const useGameLogic = () => {
     }
   }, [gameState.activePlayer, gameState.phase, aiTurn]);
 
+  const aiSetup = (player: 1 | 2) => {
+    let currentGrid = createEmptyGrid();
+    let placedCount = 0;
+    let history: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[] = [];
+    
+    const pool = [...LETTER_POOL];
+    const specials = [...SPECIAL_TILES];
+    
+    const toPlace: LetterTile[] = [];
+    const vowels = pool.filter(t => ['A', 'E', 'I', 'O', 'U'].includes(t.letter)).slice(0, 3);
+    toPlace.push(...vowels);
+    toPlace.push(...pool.filter(t => t.tier === 'rare').slice(0, 2));
+    toPlace.push(pool.find(t => t.tier === 'wildcard')!);
+    toPlace.push(...pool.filter(t => t.tier === 'uncommon').slice(0, 4));
+    toPlace.push(...specials);
+    const remaining = 15 - toPlace.length;
+    toPlace.push(...pool.filter(t => t.tier === 'common' && !toPlace.includes(t)).slice(0, remaining));
+
+    let globalAttempts = 0;
+    while (placedCount < 15 && globalAttempts < 5) {
+      globalAttempts++;
+      currentGrid = createEmptyGrid();
+      placedCount = 0;
+      history = [];
+
+      for (const tile of toPlace) {
+        let placed = false;
+        let attempts = 0;
+        while (!placed && attempts < 50) {
+          attempts++;
+          const r = Math.floor(Math.random() * GRID_SIZE);
+          const c = Math.floor(Math.random() * GRID_SIZE);
+          const orientation = Math.random() > 0.5 ? 'h' : 'v';
+
+          const cells: { r: number; c: number }[] = [];
+          let valid = true;
+          for (let i = 0; i < tile.size; i++) {
+            const nr = orientation === 'v' ? r + i : r;
+            const nc = orientation === 'h' ? c + i : c;
+            if (nr >= GRID_SIZE || nc >= GRID_SIZE || currentGrid[nr][nc].tileId) {
+              valid = false;
+              break;
+            }
+            cells.push({ r: nr, c: nc });
+          }
+
+          if (valid) {
+            const bufferSize = globalAttempts < 3 ? 1 : 0;
+            if (bufferSize > 0) {
+              for (const cell of cells) {
+                for (let dr = -bufferSize; dr <= bufferSize; dr++) {
+                  for (let dc = -bufferSize; dc <= bufferSize; dc++) {
+                    const nr = cell.r + dr;
+                    const nc = cell.c + dc;
+                    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
+                      if (currentGrid[nr][nc].tileId) {
+                        valid = false;
+                        break;
+                      }
+                    }
+                  }
+                  if (!valid) break;
+                }
+                if (!valid) break;
+              }
+            }
+          }
+
+          if (valid) {
+            cells.forEach(cell => {
+              currentGrid[cell.r][cell.c] = {
+                ...currentGrid[cell.r][cell.c],
+                tileId: tile.id,
+                letter: tile.letter,
+                tier: tile.tier,
+                isSpecial: tile.isSpecial,
+                hitsRequired: tile.isSpecial === 'vault' ? 2 : 1,
+                hitsReceived: 0,
+              };
+            });
+            history.push({ row: r, col: c, tileId: tile.id, size: tile.size, orientation });
+            placedCount++;
+            placed = true;
+          }
+        }
+      }
+    }
+
+    if (placedCount === 15) {
+      setGameState(prev => {
+        const nextPlayer = player === 1 ? 2 : 1;
+        const isLastPlayer = player === 2;
+        
+        return {
+          ...prev,
+          phase: isLastPlayer ? 'battle' : 'setup',
+          players: {
+            ...prev.players,
+            [player]: {
+              ...prev.players[player],
+              grid: currentGrid,
+              tilesPlaced: 15,
+              placementHistory: history,
+              isReady: true,
+            },
+          },
+          activePlayer: isLastPlayer ? 1 : nextPlayer,
+          message: isLastPlayer 
+            ? `Battle begins! ${prev.players[1].name}'s turn.` 
+            : `${prev.players[2].name}: Place your tiles.`,
+        };
+      });
+      playSound(SOUNDS.PLACE);
+    }
+  };
+
   useEffect(() => {
     if (gameState.phase === 'setup' && gameState.players[gameState.activePlayer].isAI) {
-      autoPlace(gameState.activePlayer);
-      setTimeout(() => finalizeSetup(gameState.activePlayer), 1000);
+      setTimeout(() => aiSetup(gameState.activePlayer), 1000);
     }
   }, [gameState.activePlayer, gameState.phase]);
 
@@ -709,8 +886,11 @@ export const useGameLogic = () => {
     setWinMode,
     updatePlayerName,
     toggleAI,
+    setDifficulty,
     undoPlacement,
     autoPlace,
+    toggleSound,
+    isSoundEnabled,
   };
 };
 
