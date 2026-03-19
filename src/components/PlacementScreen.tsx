@@ -92,41 +92,61 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 items-start justify-center p-8 bg-slate-950 min-h-screen">
-      <div className="flex flex-col gap-6 w-full lg:w-auto">
-        <div className="flex justify-between items-start">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-4xl font-serif font-bold text-white tracking-tight">
-              {player.name}: SETUP
+    <div className="flex flex-col lg:flex-row gap-8 items-start justify-center p-8 bg-slate-950 min-h-screen grid-blueprint relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(234,179,8,0.05),transparent_70%)] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-blue-500/5 rounded-full blur-[150px] pointer-events-none" />
+
+      <div className="flex flex-col gap-6 w-full lg:w-auto z-10 relative">
+        <div className="flex justify-between items-start bg-slate-900/60 p-8 rounded-2xl border-4 border-slate-800 shadow-2xl backdrop-blur-md relative group overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+          
+          <div className="flex flex-col gap-2 relative z-20">
+            <h1 className="text-4xl font-serif font-black text-white tracking-tight drop-shadow-lg uppercase">
+              {player.name}
             </h1>
-            <p className="text-slate-500 font-mono text-sm uppercase tracking-widest">
-              Place 15 tiles to begin the battle
-            </p>
+            <div className="flex items-center gap-4">
+              <span className="bg-yellow-500 text-slate-950 px-4 py-1 rounded-lg font-mono font-bold text-[10px] tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(234,179,8,0.3)] border-2 border-yellow-300">
+                Setup Phase
+              </span>
+              <p className="text-slate-500 font-mono text-[10px] font-bold uppercase tracking-[0.3em] italic opacity-70">
+                Deploy 15 tactical units
+              </p>
+            </div>
           </div>
           <button
             onClick={onQuit}
-            className="p-3 bg-slate-900 hover:bg-red-500/20 text-slate-500 hover:text-red-500 rounded-2xl border border-slate-800 hover:border-red-500/50 transition-all flex items-center gap-2 text-xs font-mono font-bold"
+            className="group relative p-4 bg-slate-950 hover:bg-red-600/10 text-slate-600 hover:text-red-400 rounded-xl border-2 border-slate-800 hover:border-red-500/40 transition-all flex items-center gap-3 text-[10px] font-mono font-bold tracking-[0.2em] shadow-xl uppercase overflow-hidden active:scale-95 z-20"
           >
-            <LogOut className="w-4 h-4" />
-            QUIT
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            Abandon
           </button>
         </div>
 
-        <Grid 
-          grid={player.grid} 
-          onCellClick={handleCellClick}
-          onCellMouseEnter={(r, c) => setHoveredCell({ r, c })}
-          onCellMouseLeave={() => setHoveredCell(null)}
-          previewCells={getPreviewCells()}
-          showLabels={true}
-        />
+        <div className="relative group p-2 bg-slate-900/40 rounded-2xl border-4 border-slate-800 shadow-2xl overflow-hidden">
+          <div className="absolute -inset-4 bg-yellow-500/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+          <div className="relative z-20 p-2">
+            <Grid 
+              grid={player.grid} 
+              onCellClick={handleCellClick}
+              onCellMouseEnter={(r, c) => setHoveredCell({ r, c })}
+              onCellMouseLeave={() => setHoveredCell(null)}
+              previewCells={getPreviewCells()}
+              showLabels={true}
+            />
+          </div>
+        </div>
 
         {error && (
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-red-500/10 border border-red-500/50 p-4 rounded-xl text-red-500 text-sm font-mono font-bold"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-600/10 text-red-400 p-6 rounded-xl font-mono font-bold text-[10px] tracking-[0.2em] uppercase border-2 border-red-500/40 shadow-lg backdrop-blur-md flex items-center gap-4"
           >
+            <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center border-2 border-red-500/20 shadow-inner">
+              <Info className="w-5 h-5" />
+            </div>
             {error}
           </motion.div>
         )}
@@ -135,18 +155,20 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
           <button
             onClick={() => onUndo(player.id)}
             disabled={player.tilesPlaced === 0}
-            className="flex-1 p-4 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-mono font-bold text-slate-300 transition-all flex items-center justify-center gap-2 border border-slate-700"
+            className="flex-1 p-6 bg-slate-900/80 hover:bg-slate-800 disabled:opacity-20 disabled:cursor-not-allowed rounded-xl font-mono font-bold text-[10px] tracking-[0.3em] text-slate-500 hover:text-red-400 transition-all flex items-center justify-center gap-4 border-2 border-slate-800 hover:border-red-500/20 shadow-xl group overflow-hidden active:scale-95"
           >
-            <Trash2 className="w-5 h-5" />
-            UNDO
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Trash2 className="w-5 h-5 text-red-500 group-hover:scale-110 transition-transform" />
+            Undo Last
           </button>
           <button
             onClick={() => onAutoPlace(player.id)}
             disabled={player.tilesPlaced === 15}
-            className="flex-1 p-4 bg-yellow-500/10 hover:bg-yellow-500/20 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-mono font-bold text-yellow-500 transition-all flex items-center justify-center gap-2 border border-yellow-500/20"
+            className="flex-1 p-6 bg-slate-900/80 hover:bg-slate-800 disabled:opacity-20 disabled:cursor-not-allowed rounded-xl font-mono font-bold text-[10px] tracking-[0.3em] text-slate-500 hover:text-yellow-400 transition-all flex items-center justify-center gap-4 border-2 border-slate-800 hover:border-yellow-500/20 shadow-xl group overflow-hidden active:scale-95"
           >
-            <RotateCw className="w-5 h-5" />
-            RANDOM
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <RotateCw className="w-5 h-5 text-yellow-500 group-hover:rotate-180 transition-transform duration-700" />
+            Auto-Fill
           </button>
         </div>
 
@@ -154,89 +176,106 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
           onClick={onFinalize}
           disabled={player.tilesPlaced < 15}
           className={`
-            w-full p-6 rounded-2xl font-serif font-bold text-2xl transition-all flex items-center justify-center gap-3
+            relative group w-full p-8 rounded-2xl font-serif font-black text-2xl transition-all flex items-center justify-center gap-6 border-4 overflow-hidden active:scale-[0.98]
             ${player.tilesPlaced < 15 
-              ? 'bg-slate-800 text-slate-600 cursor-not-allowed' 
-              : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400 shadow-lg shadow-emerald-500/20'}
+              ? 'bg-slate-900 border-slate-800 text-slate-800 cursor-not-allowed opacity-50' 
+              : 'bg-emerald-600 border-emerald-400 text-white hover:bg-emerald-500 shadow-xl hover:scale-[1.01]'}
           `}
         >
-          <Check className="w-8 h-8" />
-          FINALIZE PLACEMENT ({player.tilesPlaced}/15)
+          <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-30" />
+          <Check className={`w-10 h-10 ${player.tilesPlaced < 15 ? 'text-slate-800' : 'text-emerald-200'} drop-shadow-md`} />
+          <span className="drop-shadow-lg tracking-tight uppercase">
+            READY ({player.tilesPlaced}/15)
+          </span>
         </button>
       </div>
 
-      <div className="flex flex-col gap-8 w-full lg:w-96">
-        <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 flex flex-col gap-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-sm font-mono font-bold text-slate-500 uppercase tracking-widest">
-              Tile Tray
+      <div className="flex flex-col gap-6 w-full lg:w-[28rem] z-10 relative">
+        <div className="bg-slate-900/80 p-8 rounded-2xl border-4 border-slate-800 shadow-2xl backdrop-blur-md flex flex-col gap-8 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+          
+          <div className="flex justify-between items-center relative z-20">
+            <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-[0.4em] italic">
+              Tactical Tray
             </h3>
             <button
               onClick={() => setOrientation(prev => prev === 'h' ? 'v' : 'h')}
-              className="flex items-center gap-2 px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded-full text-[10px] font-mono font-bold text-slate-300 transition-colors"
+              className="flex items-center gap-3 px-6 py-3 bg-slate-950 hover:bg-slate-900 rounded-xl text-[10px] font-mono font-bold text-yellow-500 border-2 border-slate-800 hover:border-yellow-500/40 transition-all shadow-xl group/btn active:scale-95"
             >
-              <RotateCw className="w-3 h-3" />
+              <RotateCw className="w-4 h-4 group-hover/btn:rotate-180 transition-transform duration-500" />
               {orientation === 'h' ? 'HORIZONTAL' : 'VERTICAL'}
             </button>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <section className="flex flex-col gap-2">
-              <span className="text-[10px] font-mono font-bold text-slate-600 uppercase">Common (1x1)</span>
-              <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-8 relative z-20">
+            <section className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-yellow-500/50 rounded-full shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+                <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em]">Common Tier (1x1)</span>
+              </div>
+              <div className="flex flex-wrap gap-3 p-4 bg-slate-950/80 rounded-xl border-2 border-slate-800/40 shadow-inner">
                 {commonTiles.map(t => (
                   <Tile 
                     key={t.id} 
                     tile={t} 
                     onClick={() => setSelectedTile(t)}
-                    className={selectedTile?.id === t.id ? 'ring-4 ring-yellow-500' : ''}
+                    className={selectedTile?.id === t.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
                   />
                 ))}
               </div>
             </section>
 
-            <section className="flex flex-col gap-2">
-              <span className="text-[10px] font-mono font-bold text-slate-600 uppercase">Uncommon (1x2)</span>
-              <div className="flex flex-wrap gap-2">
+            <section className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-blue-500/50 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
+                <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em]">Uncommon Tier (1x2)</span>
+              </div>
+              <div className="flex flex-wrap gap-4 p-4 bg-slate-950/80 rounded-xl border-2 border-slate-800/40 shadow-inner">
                 {uncommonTiles.map(t => (
                   <Tile 
                     key={t.id} 
                     tile={t} 
                     onClick={() => setSelectedTile(t)}
-                    className={selectedTile?.id === t.id ? 'ring-4 ring-yellow-500' : ''}
+                    className={selectedTile?.id === t.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
                   />
                 ))}
               </div>
             </section>
 
-            <section className="flex flex-col gap-2">
-              <span className="text-[10px] font-mono font-bold text-slate-600 uppercase">Rare & Wildcard</span>
-              <div className="flex flex-wrap gap-2">
+            <section className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-purple-500/50 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.4)]" />
+                <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em]">Rare & Wildcard</span>
+              </div>
+              <div className="flex flex-wrap gap-4 p-4 bg-slate-950/80 rounded-xl border-2 border-slate-800/40 shadow-inner">
                 {rareTiles.map(t => (
                   <Tile 
                     key={t.id} 
                     tile={t} 
                     onClick={() => setSelectedTile(t)}
-                    className={selectedTile?.id === t.id ? 'ring-4 ring-yellow-500' : ''}
+                    className={selectedTile?.id === t.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
                   />
                 ))}
                 <Tile 
                   tile={wildcard} 
                   onClick={() => setSelectedTile(wildcard)}
-                  className={selectedTile?.id === wildcard.id ? 'ring-4 ring-yellow-500' : ''}
+                  className={selectedTile?.id === wildcard.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
                 />
               </div>
             </section>
 
-            <section className="flex flex-col gap-2">
-              <span className="text-[10px] font-mono font-bold text-slate-600 uppercase">Special Tiles</span>
-              <div className="flex flex-wrap gap-2">
+            <section className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-emerald-500/50 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em]">Special Assets</span>
+              </div>
+              <div className="flex flex-wrap gap-4 p-4 bg-slate-950/80 rounded-xl border-2 border-slate-800/40 shadow-inner">
                 {SPECIAL_TILES.map(t => (
                   <Tile 
                     key={t.id} 
                     tile={t} 
                     onClick={() => setSelectedTile(t)}
-                    className={selectedTile?.id === t.id ? 'ring-4 ring-yellow-500' : ''}
+                    className={selectedTile?.id === t.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
                   />
                 ))}
               </div>
@@ -244,18 +283,39 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
           </div>
         </div>
 
-        <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-800/50 flex flex-col gap-4">
-          <div className="flex items-center gap-2 text-slate-500">
-            <Info className="w-4 h-4" />
-            <h4 className="text-xs font-mono font-bold uppercase tracking-widest">Rules</h4>
+        <div className="bg-slate-900/60 p-8 rounded-2xl border-4 border-slate-800 flex flex-col gap-6 shadow-xl backdrop-blur-md relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none" />
+          <div className="flex items-center gap-4 text-slate-500 relative z-10">
+            <div className="w-10 h-10 bg-yellow-500/10 rounded-lg flex items-center justify-center border-2 border-yellow-500/20 shadow-inner">
+              <Info className="w-5 h-5 text-yellow-500" />
+            </div>
+            <h4 className="text-[10px] font-mono font-bold uppercase tracking-[0.3em]">Deployment Protocol</h4>
           </div>
-          <ul className="text-[10px] font-sans text-slate-400 flex flex-col gap-2 list-disc pl-4">
-            <li>Place exactly 15 tiles total</li>
-            <li>Min 3 vowels (Common tier)</li>
-            <li>Max 2 Rare tiles</li>
-            <li>Max 1 Wildcard</li>
-            <li>1-cell buffer required between tiles</li>
-            <li>Uncommon tiles occupy 2 cells</li>
+          <ul className="text-[11px] font-mono font-bold text-slate-500 flex flex-col gap-4 uppercase tracking-widest relative z-10">
+            <li className="flex items-center gap-4 group">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+              Place exactly 15 tiles total
+            </li>
+            <li className="flex items-center gap-4 group">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+              Min 3 vowels (Common tier)
+            </li>
+            <li className="flex items-center gap-4 group">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+              Max 2 Rare tiles
+            </li>
+            <li className="flex items-center gap-4 group">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+              Max 1 Wildcard
+            </li>
+            <li className="flex items-center gap-4 group">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+              1-cell buffer required
+            </li>
+            <li className="flex items-center gap-4 group">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+              Uncommon tiles occupy 2 cells
+            </li>
           </ul>
         </div>
       </div>
