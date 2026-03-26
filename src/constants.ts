@@ -50,14 +50,20 @@ export const TIERS: Record<Tier, { color: string; border: string; glow: string; 
 };
 
 export const LETTER_POOL: LetterTile[] = [
-  // Common (16 in pool, up to 10 placed)
-  ...(['E', 'A', 'I', 'O', 'R', 'T', 'N', 'S'] as const).flatMap(l => 
+  // Common (18 in pool, up to 10 placed)
+  ...(['E', 'A', 'I', 'O', 'U', 'R', 'T', 'N', 'S'] as const).flatMap(l => 
     Array(2).fill(null).map((_, i) => ({ id: `common-${l}-${i}`, letter: l, tier: 'common' as Tier, points: 1, size: 1 as const }))
   ),
   // Uncommon (9 in pool, up to 4 placed, 1x2)
-  ...(['B', 'C', 'D', 'F', 'G', 'H', 'L', 'M', 'P'] as const).map(l => ({ id: `uncommon-${l}`, letter: l, tier: 'uncommon' as Tier, points: 2, size: 2 as const })),
+  ...([
+    { l: 'B', p: 3 }, { l: 'C', p: 3 }, { l: 'D', p: 2 }, { l: 'F', p: 4 },
+    { l: 'G', p: 2 }, { l: 'H', p: 4 }, { l: 'L', p: 1 }, { l: 'M', p: 3 }, { l: 'P', p: 3 }
+  ] as const).map(({ l, p }) => ({ id: `uncommon-${l}`, letter: l, tier: 'uncommon' as Tier, points: p, size: 2 as const })),
   // Rare (8 in pool, max 2 placed)
-  ...(['J', 'K', 'Q', 'V', 'W', 'X', 'Y', 'Z'] as const).map(l => ({ id: `rare-${l}`, letter: l, tier: 'rare' as Tier, points: 8, size: 1 as const })),
+  ...([
+    { l: 'J', p: 8 }, { l: 'K', p: 5 }, { l: 'Q', p: 10 }, { l: 'V', p: 4 },
+    { l: 'W', p: 4 }, { l: 'X', p: 8 }, { l: 'Y', p: 4 }, { l: 'Z', p: 10 }
+  ] as const).map(({ l, p }) => ({ id: `rare-${l}`, letter: l, tier: 'rare' as Tier, points: p, size: 1 as const })),
   // Wildcard (1 in pool, max 1 placed)
   { id: 'wildcard-1', letter: '★', tier: 'wildcard' as Tier, points: 0, size: 1 as const, description: 'Can represent any letter when casting a Word Bomb.' },
 ];

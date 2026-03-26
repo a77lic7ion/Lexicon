@@ -29,10 +29,13 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
   const [hoveredCell, setHoveredCell] = useState<{ r: number; c: number } | null>(null);
 
   // Filter pool to show what's available
-  // For simplicity, we'll just show a selection of tiles
-  const commonTiles = LETTER_POOL.filter(t => t.tier === 'common').slice(0, 8);
-  const uncommonTiles = LETTER_POOL.filter(t => t.tier === 'uncommon').slice(0, 4);
-  const rareTiles = LETTER_POOL.filter(t => t.tier === 'rare').slice(0, 4);
+  // We'll show unique letters per tier for selection
+  const commonTiles = Array.from(new Set(LETTER_POOL.filter(t => t.tier === 'common').map(t => t.letter)))
+    .map(letter => LETTER_POOL.find(t => t.letter === letter && t.tier === 'common')!);
+  const uncommonTiles = Array.from(new Set(LETTER_POOL.filter(t => t.tier === 'uncommon').map(t => t.letter)))
+    .map(letter => LETTER_POOL.find(t => t.letter === letter && t.tier === 'uncommon')!);
+  const rareTiles = Array.from(new Set(LETTER_POOL.filter(t => t.tier === 'rare').map(t => t.letter)))
+    .map(letter => LETTER_POOL.find(t => t.letter === letter && t.tier === 'rare')!);
   const wildcard = LETTER_POOL.find(t => t.tier === 'wildcard')!;
 
   const handleCellClick = (r: number, c: number) => {
@@ -236,7 +239,7 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                 </div>
                 <div className="pl-5 flex flex-col gap-1">
                   <p className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                    Placement Rule: Must place at least 3 (Vowels).
+                    Placement Rule: Min 3 vowels. Max: not stated (implied by 15 total).
                   </p>
                   <p className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest leading-relaxed italic opacity-70">
                     Standard harvest. The backbone of your vocabulary.
@@ -263,7 +266,7 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                 </div>
                 <div className="pl-5 flex flex-col gap-1">
                   <p className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                    Tactical Note: Grants Bonus Draw when fully destroyed.
+                    Tactical Note: Min: 0 · Max: not stated. Grants Bonus Draw when fully destroyed.
                   </p>
                   <p className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest leading-relaxed italic opacity-70">
                     1x2 Cells. Hitting both cells triggers a Bonus Draw (free extra shot).
@@ -290,7 +293,7 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                 </div>
                 <div className="pl-5 flex flex-col gap-1">
                   <p className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                    Rare: Max 2 per grid. Wildcard: Max 1 per grid.
+                    Max 2 Rare / Max 1 Wildcard. Min: 0 for both (not stated).
                   </p>
                   <p className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest leading-relaxed italic opacity-70">
                     Rare counts double in word scoring. Wildcard represents any letter.
@@ -322,7 +325,7 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                 </div>
                 <div className="pl-5 flex flex-col gap-1">
                   <p className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                    Constraint: Maximum ONE of each special tile per player.
+                    Constraint: Max 1 each. Min: 0 (not stated).
                   </p>
                   <p className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest leading-relaxed italic opacity-70">
                     Vault: 2 hits. Poison: Decoy. Mirror: Copy. Charged: Bonus shot.
