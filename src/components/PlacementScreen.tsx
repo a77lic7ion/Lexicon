@@ -92,20 +92,20 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 items-start justify-center p-8 bg-slate-950 min-h-screen grid-blueprint relative overflow-hidden">
+    <div className="flex flex-col lg:flex-row gap-8 items-start justify-center p-4 lg:p-8 bg-slate-950 min-h-screen grid-blueprint relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(234,179,8,0.05),transparent_70%)] pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-blue-500/5 rounded-full blur-[150px] pointer-events-none" />
 
-      <div className="flex flex-col gap-6 w-full lg:w-auto z-10 relative">
-        <div className="flex justify-between items-start bg-slate-900/60 p-8 rounded-2xl border-4 border-slate-800 shadow-2xl backdrop-blur-md relative group overflow-hidden">
+      <div className="flex flex-col gap-6 w-full lg:w-auto z-10 relative items-center lg:items-start">
+        <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start bg-slate-900/60 p-6 lg:p-8 rounded-2xl border-4 border-slate-800 shadow-2xl backdrop-blur-md relative group overflow-hidden w-full">
           <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
           
-          <div className="flex flex-col gap-2 relative z-20">
-            <h1 className="text-4xl font-serif font-black text-white tracking-tight drop-shadow-lg uppercase">
+          <div className="flex flex-col gap-2 relative z-20 text-center sm:text-left mb-4 sm:mb-0">
+            <h1 className="text-3xl lg:text-4xl font-serif font-black text-white tracking-tight drop-shadow-lg uppercase">
               {player.name}
             </h1>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
               <span className="bg-yellow-500 text-slate-950 px-4 py-1 rounded-lg font-mono font-bold text-[10px] tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(234,179,8,0.3)] border-2 border-yellow-300">
                 Setup Phase
               </span>
@@ -116,7 +116,7 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
           </div>
           <button
             onClick={onQuit}
-            className="group relative p-4 bg-slate-950 hover:bg-red-600/10 text-slate-600 hover:text-red-400 rounded-xl border-2 border-slate-800 hover:border-red-500/40 transition-all flex items-center gap-3 text-[10px] font-mono font-bold tracking-[0.2em] shadow-xl uppercase overflow-hidden active:scale-95 z-20"
+            className="group relative p-3 lg:p-4 bg-slate-950 hover:bg-red-600/10 text-slate-600 hover:text-red-400 rounded-xl border-2 border-slate-800 hover:border-red-500/40 transition-all flex items-center gap-3 text-[10px] font-mono font-bold tracking-[0.2em] shadow-xl uppercase overflow-hidden active:scale-95 z-20"
           >
             <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -124,9 +124,8 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
           </button>
         </div>
 
-        <div className="relative group p-2 bg-slate-900/40 rounded-2xl border-4 border-slate-800 shadow-2xl overflow-hidden">
-          <div className="absolute -inset-4 bg-yellow-500/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-          <div className="relative z-20 p-2">
+        <div className="relative group p-2 bg-slate-900/40 rounded-2xl border-4 border-slate-800 shadow-2xl w-full overflow-x-auto pb-4 lg:pb-2">
+          <div className="relative z-20 p-2 min-w-[380px] flex justify-center">
             <Grid 
               grid={player.grid} 
               onCellClick={handleCellClick}

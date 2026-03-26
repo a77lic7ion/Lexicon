@@ -39,7 +39,6 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
 }) => {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'unified' | 'classic'>('unified');
   
   // Word Bomb State
   const [bombWord, setBombWord] = useState('');
@@ -223,94 +222,48 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
         </div>
 
         <div className="flex gap-2">
-          <button 
-            onClick={() => setViewMode(prev => prev === 'unified' ? 'classic' : 'unified')}
-            className={`px-3 py-1.5 rounded-lg border transition-all flex items-center gap-2 text-[9px] font-mono font-bold tracking-widest shadow-md active:scale-95 ${viewMode === 'unified' ? 'bg-cyan-600/20 text-cyan-400 border-cyan-500/40' : 'bg-slate-900 text-slate-600 border-slate-800 hover:border-slate-700'}`}
-          >
-            {viewMode === 'unified' ? <LayoutGrid className="w-3.5 h-3.5" /> : <Layout className="w-3.5 h-3.5" />}
-            {viewMode === 'unified' ? 'UNIFIED' : 'CLASSIC'}
-          </button>
-          <div className="h-8 w-px bg-slate-800 mx-1" />
           <button onClick={onRestart} className="p-2 bg-slate-900 hover:bg-yellow-500/10 text-slate-600 hover:text-yellow-500 rounded-lg border border-slate-800 transition-all active:scale-95"><RefreshCw className="w-4 h-4" /></button>
           <button onClick={onQuit} className="p-2 bg-slate-900 hover:bg-red-500/10 text-slate-600 hover:text-red-500 rounded-lg border border-slate-800 transition-all active:scale-95"><LogOut className="w-4 h-4" /></button>
           <button onClick={() => setIsHistoryModalOpen(true)} className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-600 hover:text-white rounded-lg border border-slate-800 transition-all active:scale-95"><History className="w-4 h-4" /></button>
           <button onClick={() => setIsSettingsModalOpen(true)} className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-600 hover:text-white rounded-lg border border-slate-800 transition-all active:scale-95"><Settings className="w-4 h-4" /></button>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex flex-row gap-8 w-full max-w-[1080px] items-start justify-center relative z-10">
+      </div>      {/* Main Content */}
+      <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[1080px] items-start justify-center relative z-10">
         
         {/* Left Side: Grids */}
-        <div className="flex-1 flex flex-col items-center">
-          {viewMode === 'unified' ? (
-            <div className="flex flex-col gap-6 items-center w-full">
-              <UnifiedGrid 
-                myGrid={viewingPlayer.grid}
-                opponentGrid={opponent.grid}
-                onCellClick={handleGridClick}
-                onCellMouseEnter={handleMouseEnter}
-                onCellMouseLeave={() => setPreviewCells([])}
-                previewCells={previewCells}
-                activePlayer={gameState.activePlayer}
-              />
+        <div className="flex-1 flex flex-col items-center w-full overflow-x-auto pb-4 lg:pb-0">
+          <div className="flex flex-col gap-6 items-center w-full min-w-[380px]">
+            <UnifiedGrid 
+              myGrid={viewingPlayer.grid}
+              opponentGrid={opponent.grid}
+              onCellClick={handleGridClick}
+              onCellMouseEnter={handleMouseEnter}
+              onCellMouseLeave={() => setPreviewCells([])}
+              previewCells={previewCells}
+              activePlayer={gameState.activePlayer}
+            />
 
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={message}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className={`
-                    w-full p-4 rounded-xl font-mono font-bold text-center uppercase tracking-widest text-sm border-2 shadow-lg
-                    ${message.includes('HIT') 
-                      ? 'bg-red-950/40 text-red-500 border-red-500/40 shadow-red-500/10' 
-                      : 'bg-slate-900/60 text-slate-500 border-slate-800 shadow-black/20'}
-                  `}
-                >
-                  {isTargeting ? `SELECT TARGET FOR ${currentEffect?.name}` : message}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-6 items-center w-full">
-              {/* Tracking Grid */}
-              <div className="flex flex-col gap-4 items-center">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-xl font-bold text-white uppercase tracking-tight">Tracking</h2>
-                  <div className="px-3 py-1 bg-red-500/10 border border-red-500/30 rounded-full">
-                    <span className="text-[9px] font-mono font-bold text-red-500 uppercase tracking-widest">
-                      {totalLettersLeft} Units
-                    </span>
-                  </div>
-                </div>
-                <Grid 
-                  grid={opponent.grid} 
-                  isEnemy={true}
-                  onCellClick={handleGridClick}
-                  onCellMouseEnter={handleMouseEnter}
-                  onCellMouseLeave={() => setPreviewCells([])}
-                  previewCells={previewCells}
-                  activePlayer={gameState.activePlayer}
-                  showLabels={true}
-                />
-              </div>
-
-              {/* Home Grid */}
-              <div className="flex flex-col gap-4 items-center">
-                <h2 className="text-xl font-bold text-white uppercase tracking-tight">Home</h2>
-                <Grid 
-                  grid={viewingPlayer.grid} 
-                  isEnemy={false}
-                  showLabels={false}
-                />
-              </div>
-            </div>
-          )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={message}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className={`
+                  w-full p-4 rounded-xl font-mono font-bold text-center uppercase tracking-widest text-sm border-2 shadow-lg
+                  ${message.includes('HIT') 
+                    ? 'bg-red-950/40 text-red-500 border-red-500/40 shadow-red-500/10' 
+                    : 'bg-slate-900/60 text-slate-500 border-slate-800 shadow-black/20'}
+                `}
+              >
+                {isTargeting ? `SELECT TARGET FOR ${currentEffect?.name}` : message}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* Right Side: Action Panel */}
-        <div className="w-[320px] flex flex-col gap-4 h-full">
+        <div className="w-full lg:w-[320px] flex flex-col gap-4">
           
           {/* Opponent's Bank (Top) */}
           <LetterBank bank={opponent.bank} title={`Opponent Bank (${opponent.name})`} />

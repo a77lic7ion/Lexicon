@@ -31,29 +31,32 @@ export const Grid: React.FC<GridProps> = ({
       {/* Subtle Radial Gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(30,41,59,0.2)_0%,transparent_70%)] pointer-events-none" />
 
-      <div className="flex flex-col gap-1 relative z-10">
-        {/* Column Labels */}
-        {showLabels && (
-          <div className="flex ml-8 mb-1">
-            {cols.map(c => (
-              <div key={c} className="w-8 h-5 flex items-center justify-center text-[9px] font-mono font-bold text-slate-600 tracking-widest uppercase">
-                {c}
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="relative z-10">
+        <div className="grid grid-cols-[32px_1fr] grid-rows-[32px_1fr] gap-0">
+          {/* Corner */}
+          <div />
 
-        <div className="flex">
+          {/* Column Labels */}
+          {showLabels ? (
+            <div className="grid grid-cols-10 gap-1 px-2">
+              {cols.map(c => (
+                <div key={c} className="w-8 h-8 flex items-center justify-center text-[10px] font-mono font-bold text-slate-600 tracking-widest uppercase">
+                  {c}
+                </div>
+              ))}
+            </div>
+          ) : <div />}
+
           {/* Row Labels */}
-          {showLabels && (
-            <div className="flex flex-col mr-3">
+          {showLabels ? (
+            <div className="grid grid-rows-10 gap-1 py-2">
               {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="w-5 h-8 flex items-center justify-center text-[9px] font-mono font-bold text-slate-600 tracking-widest">
+                <div key={i} className="w-8 h-8 flex items-center justify-center text-[10px] font-mono font-bold text-slate-600 tracking-widest">
                   {i + 1}
                 </div>
               ))}
             </div>
-          )}
+          ) : <div />}
 
           {/* Grid Cells Container */}
           <div className="grid grid-cols-10 gap-1 p-2 bg-slate-900/40 rounded-lg border border-slate-800/40 grid-blueprint shadow-inner">

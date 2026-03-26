@@ -33,28 +33,32 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(56,189,248,0.1),transparent_70%)] pointer-events-none" />
       <div className="absolute inset-0 grid-blueprint opacity-15 pointer-events-none" />
       
-      {/* Column Labels */}
-      <div className="flex ml-8 mb-1">
-        {cols.map(c => (
-          <div key={c} className="w-8 h-5 flex items-center justify-center text-[9px] font-mono font-bold text-slate-600 tracking-widest uppercase">
-            {c}
+      <div className="relative z-10">
+        <div className="grid grid-cols-[32px_1fr] grid-rows-[32px_1fr] gap-0">
+          {/* Corner */}
+          <div />
+
+          {/* Column Labels */}
+          <div className="grid grid-cols-10 gap-1 px-2">
+            {cols.map(c => (
+              <div key={c} className="w-8 h-8 flex items-center justify-center text-[10px] font-mono font-bold text-slate-600 tracking-widest uppercase">
+                {c}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className="flex">
-        {/* Row Labels */}
-        <div className="flex flex-col mr-3">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="w-5 h-8 flex items-center justify-center text-[9px] font-mono font-bold text-slate-600">
-              {i + 1}
-            </div>
-          ))}
-        </div>
+          {/* Row Labels */}
+          <div className="grid grid-rows-10 gap-1 py-2">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="w-8 h-8 flex items-center justify-center text-[10px] font-mono font-bold text-slate-600">
+                {i + 1}
+              </div>
+            ))}
+          </div>
 
-        {/* Grid Cells Container */}
-        <div className="grid grid-cols-10 gap-1 bg-slate-900/40 p-2 rounded-lg border border-slate-800/40 shadow-inner">
-          {myGrid.flat().map((myCell, idx) => {
+          {/* Grid Cells Container */}
+          <div className="grid grid-cols-10 gap-1 bg-slate-900/40 p-2 rounded-lg border border-slate-800/40 shadow-inner">
+            {myGrid.flat().map((myCell, idx) => {
             const r = myCell.row;
             const c = myCell.col;
             const oppCell = opponentGrid[r][c];
@@ -159,8 +163,9 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
           })}
         </div>
       </div>
+    </div>
 
-      {/* Legend Container */}
+    {/* Legend Container */}
       <div className="mt-4 flex flex-wrap gap-4 justify-center border-t border-slate-900/60 pt-4">
         <div className="flex items-center gap-2 group">
           <div className="w-3 h-3 rounded bg-cyan-500/20 border border-cyan-500/40" />
