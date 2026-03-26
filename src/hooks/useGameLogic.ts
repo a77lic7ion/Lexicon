@@ -479,7 +479,7 @@ export const useGameLogic = () => {
       // Mirror logic: remains unbroken on first hit
       if (isMirror && !cell.isMirrored) {
         cell.isMirrored = true;
-        cell.isHit = false; // Rule: "original remains on the grid unbroken"
+        cell.isHit = false; 
       } else {
         cell.isHit = true;
       }
@@ -502,11 +502,14 @@ export const useGameLogic = () => {
       }
 
       // Harvesting logic
-      // Vault requires 2 hits. Mirror yields letter on first hit (even if unbroken).
-      const shouldHarvest = isMirror || !isVault || (cell.hitsReceived === 2);
+      // Vault requires 2 hits. Mirror yields letter once. Poison never yields.
+      const shouldHarvest = (isMirror && !cell.isHarvested) || (!isMirror && (!isVault || cell.hitsReceived === 2));
       
       if (shouldHarvest && !isPoison) {
         harvestedLetter = LETTER_POOL.find(l => l.letter === cell.letter && l.tier === cell.tier) || null;
+        if (isMirror && harvestedLetter) {
+          cell.isHarvested = true;
+        }
       }
 
       if (cell.tier === 'uncommon') {
@@ -628,18 +631,23 @@ export const useGameLogic = () => {
 
     for (const char of wordLetters) {
       const idx = newBank.findIndex(l => l.letter === char);
-      if (idx === -1) {
-        const wildcardIdx = newBank.findIndex(l => l.tier === 'wildcard');
-        if (wildcardIdx === -1) {
-          setError('Missing letters in bank');
-          return;
-        }
-        wordScore += newBank[wildcardIdx].points;
-        newBank.splice(wildcardIdx, 1);
-      } else {
-        wordScore += newBank[idx].points;
-        newBank.splice(idx, 1);
+      const wildcardIdx = idx === -1 ? newBank.findIndex(l => l.tier === 'wildcard') : -1;
+
+      if (idx === -1 && wildcardIdx === -1) {
+        setError('Missing letters in bank');
+        return;
       }
+
+      const tile = idx !== -1 ? newBank[idx] : newBank[wildcardIdx];
+      let points = tile.points;
+      
+      // Rare letters count for double points in Word Bombs
+      if (tile.tier === 'rare') {
+        points *= 2;
+      }
+      
+      wordScore += points;
+      newBank.splice(idx !== -1 ? idx : wildcardIdx, 1);
     }
 
     setMessage(`Word Bomb: ${upperWord} cast! Consumed ${upperWord.length} letters. Score: +${wordScore}`);

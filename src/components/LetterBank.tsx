@@ -7,9 +7,10 @@ interface LetterBankProps {
   bank: LetterTile[];
   onTileClick?: (tile: LetterTile) => void;
   title?: string;
+  hidden?: boolean;
 }
 
-export const LetterBank: React.FC<LetterBankProps> = ({ bank, onTileClick, title = "Letter Bank" }) => {
+export const LetterBank: React.FC<LetterBankProps> = ({ bank, onTileClick, title = "Letter Bank", hidden = false }) => {
   return (
     <div className="flex flex-col gap-1 p-2 bg-slate-900/40 rounded-xl border border-slate-800 shadow-lg w-full backdrop-blur-md relative overflow-hidden group">
       <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
@@ -39,6 +40,7 @@ export const LetterBank: React.FC<LetterBankProps> = ({ bank, onTileClick, title
                 onClick={() => onTileClick?.(tile)}
                 className="w-8 h-8"
                 showPoints={false}
+                hidden={hidden}
               />
             </motion.div>
           ))}

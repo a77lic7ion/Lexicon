@@ -330,7 +330,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
               <span className="text-[10px] font-mono font-black text-blue-500 uppercase tracking-widest">Score: {opponent.score}</span>
             </div>
           </div>
-          <LetterBank bank={opponent.bank} title="" />
+          <LetterBank bank={opponent.bank} title="" hidden={true} />
         </div>
 
         {/* Central Board */}

@@ -9,8 +9,6 @@ export const COMMON_WORDS = new Set([
 export function isValidWord(word: string): boolean {
   const upperWord = word.toUpperCase();
   if (upperWord.length < 3) return false;
-  // In a real app, we'd check a full dictionary.
-  // For this demo, we'll allow any word that's 3+ letters and only contains A-Z.
-  // But we'll prioritize the common words if we want to be strict.
-  return /^[A-Z]+$/.test(upperWord);
+  // Use the common words list for strict validation as requested
+  return COMMON_WORDS.has(upperWord);
 }

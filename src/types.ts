@@ -18,6 +18,7 @@ export interface CellState {
   hitsReceived?: number;
   isRevealed?: boolean; // For Spark/Surge
   isMirrored?: boolean; // For Mirror asset
+  isHarvested?: boolean; // For Mirror asset single-use harvest
 }
 
 export interface PlayerState {
