@@ -189,28 +189,59 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
         </button>
       </div>
 
-      <div className="flex flex-col gap-6 w-full lg:w-[28rem] z-10 relative">
+      <div className="flex flex-col gap-6 w-full lg:w-[32rem] z-10 relative">
         <div className="bg-slate-900/80 p-8 rounded-2xl border-4 border-slate-800 shadow-2xl backdrop-blur-md flex flex-col gap-8 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
           
-          <div className="flex justify-between items-center relative z-20">
-            <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-[0.4em] italic">
-              Tactical Tray
-            </h3>
-            <button
-              onClick={() => setOrientation(prev => prev === 'h' ? 'v' : 'h')}
-              className="flex items-center gap-3 px-6 py-3 bg-slate-950 hover:bg-slate-900 rounded-xl text-[10px] font-mono font-bold text-yellow-500 border-2 border-slate-800 hover:border-yellow-500/40 transition-all shadow-xl group/btn active:scale-95"
-            >
-              <RotateCw className="w-4 h-4 group-hover/btn:rotate-180 transition-transform duration-500" />
-              {orientation === 'h' ? 'HORIZONTAL' : 'VERTICAL'}
-            </button>
+          <div className="flex flex-col gap-6 relative z-20">
+            <div className="flex justify-between items-center">
+              <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-[0.4em] italic">
+                Tactical Tray
+              </h3>
+              <button
+                onClick={() => setOrientation(prev => prev === 'h' ? 'v' : 'h')}
+                className="flex items-center gap-3 px-6 py-3 bg-slate-950 hover:bg-slate-900 rounded-xl text-[10px] font-mono font-bold text-yellow-500 border-2 border-slate-800 hover:border-yellow-500/40 transition-all shadow-xl group/btn active:scale-95"
+              >
+                <RotateCw className="w-4 h-4 group-hover/btn:rotate-180 transition-transform duration-500" />
+                {orientation === 'h' ? 'HORIZONTAL' : 'VERTICAL'}
+              </button>
+            </div>
+
+            <div className="bg-slate-950/60 p-6 rounded-xl border-2 border-slate-800/60 flex flex-col gap-4">
+              <div className="flex items-center gap-4 text-yellow-500">
+                <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center border-2 border-yellow-500/20 shadow-inner">
+                  <Info className="w-4 h-4" />
+                </div>
+                <h4 className="text-[10px] font-mono font-bold uppercase tracking-[0.3em]">Deployment Protocol</h4>
+              </div>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">
+                <li className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+                  Place exactly 15 tiles total
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+                  1-cell buffer required
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-8 relative z-20">
+          <div className="flex flex-col gap-10 relative z-20">
             <section className="flex flex-col gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-yellow-500/50 rounded-full shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
-                <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em]">Common Tier (1x1)</span>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-yellow-500/50 rounded-full shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+                  <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em]">Common Tier (1x1)</span>
+                </div>
+                <div className="pl-5 flex flex-col gap-1">
+                  <p className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+                    Placement Rule: Must place at least 3 (Vowels).
+                  </p>
+                  <p className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest leading-relaxed italic opacity-70">
+                    Standard harvest. The backbone of your vocabulary.
+                  </p>
+                </div>
               </div>
               <div className="flex flex-wrap gap-3 p-4 bg-slate-950/80 rounded-xl border-2 border-slate-800/40 shadow-inner">
                 {commonTiles.map(t => (
@@ -225,9 +256,19 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
             </section>
 
             <section className="flex flex-col gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-blue-500/50 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
-                <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em]">Uncommon Tier (1x2)</span>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-blue-500/50 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
+                  <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em]">Uncommon Tier (1x2)</span>
+                </div>
+                <div className="pl-5 flex flex-col gap-1">
+                  <p className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+                    Tactical Note: Grants Bonus Draw when fully destroyed.
+                  </p>
+                  <p className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest leading-relaxed italic opacity-70">
+                    1x2 Cells. Hitting both cells triggers a Bonus Draw (free extra shot).
+                  </p>
+                </div>
               </div>
               <div className="flex flex-wrap gap-4 p-4 bg-slate-950/80 rounded-xl border-2 border-slate-800/40 shadow-inner">
                 {uncommonTiles.map(t => (
@@ -242,9 +283,19 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
             </section>
 
             <section className="flex flex-col gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-purple-500/50 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.4)]" />
-                <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em]">Rare & Wildcard</span>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-purple-500/50 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.4)]" />
+                  <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em]">Rare & Wildcard</span>
+                </div>
+                <div className="pl-5 flex flex-col gap-1">
+                  <p className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+                    Rare: Max 2 per grid. Wildcard: Max 1 per grid.
+                  </p>
+                  <p className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest leading-relaxed italic opacity-70">
+                    Rare counts double in word scoring. Wildcard represents any letter.
+                  </p>
+                </div>
               </div>
               <div className="flex flex-wrap gap-4 p-4 bg-slate-950/80 rounded-xl border-2 border-slate-800/40 shadow-inner">
                 {rareTiles.map(t => (
@@ -264,9 +315,19 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
             </section>
 
             <section className="flex flex-col gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-emerald-500/50 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-                <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em]">Special Assets</span>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-emerald-500/50 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                  <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em]">Special Assets</span>
+                </div>
+                <div className="pl-5 flex flex-col gap-1">
+                  <p className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+                    Constraint: Maximum ONE of each special tile per player.
+                  </p>
+                  <p className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest leading-relaxed italic opacity-70">
+                    Vault: 2 hits. Poison: Decoy. Mirror: Copy. Charged: Bonus shot.
+                  </p>
+                </div>
               </div>
               <div className="flex flex-wrap gap-4 p-4 bg-slate-950/80 rounded-xl border-2 border-slate-800/40 shadow-inner">
                 {SPECIAL_TILES.map(t => (
@@ -280,42 +341,6 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
               </div>
             </section>
           </div>
-        </div>
-
-        <div className="bg-slate-900/60 p-8 rounded-2xl border-4 border-slate-800 flex flex-col gap-6 shadow-xl backdrop-blur-md relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none" />
-          <div className="flex items-center gap-4 text-slate-500 relative z-10">
-            <div className="w-10 h-10 bg-yellow-500/10 rounded-lg flex items-center justify-center border-2 border-yellow-500/20 shadow-inner">
-              <Info className="w-5 h-5 text-yellow-500" />
-            </div>
-            <h4 className="text-[10px] font-mono font-bold uppercase tracking-[0.3em]">Deployment Protocol</h4>
-          </div>
-          <ul className="text-[11px] font-mono font-bold text-slate-500 flex flex-col gap-4 uppercase tracking-widest relative z-10">
-            <li className="flex items-center gap-4 group">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
-              Place exactly 15 tiles total
-            </li>
-            <li className="flex items-center gap-4 group">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
-              Min 3 vowels (Common tier)
-            </li>
-            <li className="flex items-center gap-4 group">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
-              Max 2 Rare tiles
-            </li>
-            <li className="flex items-center gap-4 group">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
-              Max 1 Wildcard
-            </li>
-            <li className="flex items-center gap-4 group">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
-              1-cell buffer required
-            </li>
-            <li className="flex items-center gap-4 group">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
-              Uncommon tiles occupy 2 cells
-            </li>
-          </ul>
         </div>
       </div>
     </div>
