@@ -272,7 +272,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
           </div>
 
           {/* Live Turn Ticker */}
-          <div className="flex flex-col gap-3 flex-1 min-h-0">
+          <div className="flex flex-col gap-3 h-[250px] shrink-0">
             <div className="flex items-center gap-2 text-slate-500">
               <History className="w-4 h-4" />
               <span className="text-[10px] font-mono font-black uppercase tracking-widest">Turn Ticker</span>
@@ -283,10 +283,10 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
                 <span className="text-[9px] font-mono text-yellow-500">TURN {gameState.turnCount + 1}</span>
               </div>
               <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 custom-scrollbar">
-                {gameState.history.slice(0, 10).map((entry, idx) => (
+                {gameState.history.slice(0, 50).map((entry, idx) => (
                   <div key={idx} className="flex flex-col gap-1 border-l-2 border-slate-800 pl-3 py-1">
                     <div className="flex justify-between items-center">
-                      <span className={`text-[9px] font-bold uppercase ${entry.playerId === 1 ? 'text-blue-400' : 'text-red-400'}`}>
+                      <span className={`text-[9px] font-bold uppercase ${entry.playerId === 1 ? 'text-red-400' : 'text-blue-400'}`}>
                         {gameState.players[entry.playerId].name}
                       </span>
                       <span className="text-[8px] font-mono text-slate-600">#{gameState.history.length - idx}</span>

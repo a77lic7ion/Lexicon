@@ -121,6 +121,15 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
                     hover:border-slate-500 hover:shadow-[0_0_10px_rgba(255,255,255,0.1)]
                   `}
                 >
+                  {/* Bright Overlay for Hits */}
+                  {(iHitThem || isMyTileHit) && (
+                    <div className={`absolute inset-0 ${
+                      (iHitThem && activePlayer === 1) || (isMyTileHit && activePlayer === 2) 
+                        ? 'bg-red-500/15 shadow-[inset_0_0_15px_rgba(239,68,68,0.3)]' 
+                        : 'bg-blue-500/15 shadow-[inset_0_0_15px_rgba(59,130,246,0.3)]'
+                    } pointer-events-none z-0`} />
+                  )}
+
                   {/* My Ship Indicator (Small dot) */}
                   {hasMyTile && !isMyTileHit && (
                     <div className="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-cyan-400/40 shadow-[0_0_6px_rgba(34,211,238,0.5)]" />
@@ -131,9 +140,12 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
                     <motion.div 
                       animate={{ opacity: [0.4, 0.8, 0.4], scale: [0.9, 1.1, 0.9] }}
                       transition={{ repeat: Infinity, duration: 1.5 }}
-                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
                     >
                       <Flame className="w-5 h-5 text-orange-500/30 blur-[1px]" />
+                      <span className={`absolute -top-1 -right-1 text-[8px] font-black px-1 rounded border bg-slate-950 shadow-lg ${activePlayer === 1 ? 'text-blue-400 border-blue-500/50' : 'text-red-400 border-red-500/50'}`}>
+                        P{activePlayer === 1 ? 2 : 1}
+                      </span>
                     </motion.div>
                   )}
 
@@ -142,9 +154,12 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
                     <motion.div 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="z-10 flex flex-col items-center justify-center"
+                      className="z-20 flex flex-col items-center justify-center relative"
                     >
-                      <Target className="w-5 h-5 text-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.5)]" />
+                      <Target className={`w-5 h-5 ${activePlayer === 1 ? 'text-red-500' : 'text-blue-500'} drop-shadow-[0_0_6px_rgba(239,68,68,0.5)]`} />
+                      <span className={`absolute -top-2 -right-2 text-[8px] font-black px-1 rounded border bg-slate-950 shadow-lg ${activePlayer === 1 ? 'text-red-400 border-red-500/50' : 'text-blue-400 border-blue-500/50'}`}>
+                        P{activePlayer}
+                      </span>
                       {oppCell.letter && isTileDestroyed && (
                         <motion.span 
                           initial={{ opacity: 0, y: 5 }}
