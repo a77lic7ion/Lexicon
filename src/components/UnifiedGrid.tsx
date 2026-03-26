@@ -7,6 +7,9 @@ interface UnifiedGridProps {
   myGrid: CellState[][];
   opponentGrid: CellState[][];
   onCellClick: (row: number, col: number) => void;
+  onCellMouseEnter?: (row: number, col: number) => void;
+  onCellMouseLeave?: () => void;
+  previewCells?: { r: number; c: number; isValid: boolean }[];
   activePlayer: 1 | 2;
 }
 
@@ -14,12 +17,18 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
   myGrid, 
   opponentGrid, 
   onCellClick,
+  onCellMouseEnter,
+  onCellMouseLeave,
+  previewCells,
   activePlayer
 }) => {
   const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
   return (
-    <div className="flex flex-col gap-3 p-4 bg-slate-950 rounded-xl shadow-xl border-2 border-slate-900 relative overflow-hidden">
+    <div 
+      className="flex flex-col gap-3 p-4 bg-slate-950 rounded-xl shadow-xl border-2 border-slate-900 relative overflow-hidden"
+      onMouseLeave={onCellMouseLeave}
+    >
       {/* Decorative Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(56,189,248,0.1),transparent_70%)] pointer-events-none" />
       <div className="absolute inset-0 grid-blueprint opacity-15 pointer-events-none" />
@@ -58,6 +67,8 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
             const iMissedThem = oppCell.isMiss;
             const isOppRevealed = oppCell.isRevealed;
 
+            const preview = previewCells?.find(p => p.r === r && p.c === c);
+
             // Determine Cell Background
             let bgColor = 'bg-slate-950/60';
             let borderColor = 'border-slate-800/40';
@@ -72,12 +83,18 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
               borderColor = 'border-slate-800/60';
             }
 
+            if (preview) {
+              bgColor = preview.isValid ? 'bg-emerald-500/20' : 'bg-red-500/20';
+              borderColor = preview.isValid ? 'border-emerald-500/60' : 'border-red-500/60';
+            }
+
             return (
               <motion.div
                 key={`${r}-${c}`}
                 whileHover={{ scale: 1.1, zIndex: 10 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onCellClick(r, c)}
+                onMouseEnter={() => onCellMouseEnter?.(r, c)}
                 className={`
                   w-8 h-8 rounded-md border ${borderColor} ${bgColor} ${shadow}
                   flex items-center justify-center cursor-pointer relative

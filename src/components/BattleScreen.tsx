@@ -3,11 +3,12 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Grid } from './Grid';
 import { UnifiedGrid } from './UnifiedGrid';
 import { LetterBank } from './LetterBank';
-import { WordBombModal } from './WordBombModal';
 import { GameHistoryModal } from './GameHistoryModal';
 import { SettingsModal } from './SettingsModal';
-import { Zap, Target, History, Settings, Info, Trophy, LogOut, RefreshCw, Users, Shield, LayoutGrid, Layout } from 'lucide-react';
+import { Zap, Target, History, Settings, Info, Trophy, LogOut, RefreshCw, Users, Shield, LayoutGrid, Layout, ChevronRight, ChevronLeft } from 'lucide-react';
 import { GameState, Difficulty } from '../types';
+import { BOMB_EFFECTS } from '../constants';
+import { isValidWord } from '../utils/dictionary';
 
 interface BattleScreenProps {
   gameState: GameState;
@@ -36,11 +37,18 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   onSetDifficulty,
   onSkipTurn
 }) => {
-  const [isBombModalOpen, setIsBombModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'unified' | 'classic'>('unified');
   
+  // Word Bomb State
+  const [bombWord, setBombWord] = useState('');
+  const [bombError, setBombError] = useState<string | null>(null);
+  const [isTargeting, setIsTargeting] = useState(false);
+  const [targetingType, setTargetingType] = useState<'row' | 'col' | 'cell' | 'area2x2' | null>(null);
+  const [rowColToggle, setRowColToggle] = useState<'row' | 'col'>('row');
+  const [previewCells, setPreviewCells] = useState<{ r: number; c: number; isValid: boolean }[]>([]);
+
   const isAIGame = gameState.players[2].isAI;
   const [showPassDevice, setShowPassDevice] = useState(false);
   const [viewingPlayerId, setViewingPlayerId] = useState<1 | 2>(isAIGame ? 1 : gameState.activePlayer);
@@ -64,6 +72,103 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   const isMyTurn = gameState.activePlayer === viewingPlayerId;
   
   const totalLettersLeft = opponent.grid.flat().filter(c => c.tileId && !c.isHit).length;
+
+  const wordLen = bombWord.trim().length;
+  const currentEffect = BOMB_EFFECTS[wordLen as keyof typeof BOMB_EFFECTS] || (wordLen >= 8 ? BOMB_EFFECTS[8] : null);
+
+  useEffect(() => {
+    if (wordLen === 3 || wordLen === 5 || wordLen >= 8) {
+      setTargetingType(rowColToggle);
+    } else if (wordLen === 4) {
+      setTargetingType('cell');
+    } else if (wordLen === 6) {
+      setTargetingType('area2x2');
+    } else {
+      setTargetingType(null);
+    }
+  }, [wordLen, rowColToggle]);
+
+  const validateBomb = () => {
+    const upperWord = bombWord.trim().toUpperCase();
+    if (!isValidWord(upperWord)) return 'Invalid word';
+    if (gameState.playedWords.includes(upperWord)) return 'Word already played';
+    
+    const bankLetters = viewingPlayer.bank.map(l => l.letter);
+    const tempBank = [...bankLetters];
+    for (const char of upperWord.split('')) {
+      const idx = tempBank.indexOf(char);
+      if (idx === -1) {
+        const wildIdx = tempBank.indexOf('★');
+        if (wildIdx === -1) return 'Missing letters';
+        tempBank.splice(wildIdx, 1);
+      } else {
+        tempBank.splice(idx, 1);
+      }
+    }
+    return null;
+  };
+
+  const handleStartTargeting = () => {
+    const err = validateBomb();
+    if (err) {
+      setBombError(err);
+      return;
+    }
+    
+    if (targetingType === null) {
+      // Execute immediately for effects like Tempest (7 letters)
+      onExecuteBomb(bombWord.trim().toUpperCase(), {});
+      setBombWord('');
+      setBombError(null);
+    } else {
+      setIsTargeting(true);
+      setBombError(null);
+    }
+  };
+
+  const handleGridClick = (r: number, c: number) => {
+    if (!isMyTurn) return;
+
+    if (isTargeting) {
+      const target: any = {};
+      if (targetingType === 'row') target.row = r;
+      if (targetingType === 'col') target.col = c;
+      if (targetingType === 'cell') target.cell = { r, c };
+      if (targetingType === 'area2x2') target.cell = { r, c }; // Backend handles 2x2 from anchor
+
+      onExecuteBomb(bombWord.trim().toUpperCase(), target);
+      setBombWord('');
+      setIsTargeting(false);
+      setPreviewCells([]);
+    } else {
+      onFire(r, c);
+    }
+  };
+
+  const handleMouseEnter = (r: number, c: number) => {
+    if (!isTargeting || !targetingType) return;
+
+    const cells: { r: number; c: number; isValid: boolean }[] = [];
+    if (targetingType === 'row') {
+      for (let i = 0; i < 10; i++) cells.push({ r, c: i, isValid: true });
+    } else if (targetingType === 'col') {
+      for (let i = 0; i < 10; i++) cells.push({ r: i, c, isValid: true });
+    } else if (targetingType === 'cell') {
+      cells.push({ r, c, isValid: true });
+    } else if (targetingType === 'area2x2') {
+      // 2x2 area, r,c is top-left
+      for (let dr = 0; dr < 2; dr++) {
+        for (let dc = 0; dc < 2; dc++) {
+          if (r + dr < 10 && c + dc < 10) {
+            cells.push({ r: r + dr, c: c + dc, isValid: true });
+          } else {
+            cells.push({ r: r + dr, c: c + dc, isValid: false });
+          }
+        }
+      }
+    }
+    setPreviewCells(cells);
+  };
 
   if (showPassDevice) {
     return (
@@ -100,279 +205,225 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   }
 
   return (
-    <div className="flex flex-col gap-8 p-8 bg-slate-950 min-h-screen items-center grid-blueprint relative overflow-hidden">
+    <div className="flex flex-col gap-6 p-6 bg-slate-950 min-h-screen items-center grid-blueprint relative overflow-hidden">
       {/* Background Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-cyan-900/10 blur-[120px] rounded-full pointer-events-none" />
 
       {/* Header */}
-      <div className="flex justify-between items-center w-full max-w-7xl relative z-10">
+      <div className="flex justify-between items-center w-full max-w-[1080px] relative z-10">
         <div className="flex flex-col gap-1">
-          <h1 className="text-4xl font-bold text-white tracking-tight flex items-center gap-4 drop-shadow-lg">
+          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-4 drop-shadow-lg">
             LEXICON
             <div className="flex flex-col items-start">
-              <span className="text-[10px] font-mono font-bold text-yellow-500 bg-yellow-500/10 px-3 py-0.5 rounded-lg border border-yellow-500/30 uppercase tracking-widest">
+              <span className="text-[9px] font-mono font-bold text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-lg border border-yellow-500/30 uppercase tracking-widest">
                 TURN {gameState.turnCount + 1}
               </span>
             </div>
           </h1>
-          <div className="flex items-center gap-3 ml-1">
-            <div className="h-px w-8 bg-slate-800 rounded-full" />
-            <p className="text-slate-500 font-mono text-[10px] font-bold uppercase tracking-widest">
-              {gameState.players[gameState.activePlayer].name}'s Strike Phase
-            </p>
-          </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <button 
             onClick={() => setViewMode(prev => prev === 'unified' ? 'classic' : 'unified')}
-            className={`px-4 py-2 rounded-xl border transition-all flex items-center gap-3 text-[10px] font-mono font-bold tracking-widest shadow-md active:scale-95 ${viewMode === 'unified' ? 'bg-cyan-600/20 text-cyan-400 border-cyan-500/40' : 'bg-slate-900 text-slate-600 border-slate-800 hover:border-slate-700'}`}
-            title="Toggle View Mode"
+            className={`px-3 py-1.5 rounded-lg border transition-all flex items-center gap-2 text-[9px] font-mono font-bold tracking-widest shadow-md active:scale-95 ${viewMode === 'unified' ? 'bg-cyan-600/20 text-cyan-400 border-cyan-500/40' : 'bg-slate-900 text-slate-600 border-slate-800 hover:border-slate-700'}`}
           >
-            {viewMode === 'unified' ? <LayoutGrid className="w-4 h-4" /> : <Layout className="w-4 h-4" />}
+            {viewMode === 'unified' ? <LayoutGrid className="w-3.5 h-3.5" /> : <Layout className="w-3.5 h-3.5" />}
             {viewMode === 'unified' ? 'UNIFIED' : 'CLASSIC'}
           </button>
-          <div className="h-10 w-px bg-slate-800 mx-1" />
-          <button 
-            onClick={onRestart}
-            className="p-2.5 bg-slate-900 hover:bg-yellow-500/10 text-slate-600 hover:text-yellow-500 rounded-xl border border-slate-800 hover:border-yellow-500/40 transition-all shadow-md active:scale-95"
-            title="Restart Game"
-          >
-            <RefreshCw className="w-5 h-5" />
-          </button>
-          <button 
-            onClick={onQuit}
-            className="p-2.5 bg-slate-900 hover:bg-red-500/10 text-slate-600 hover:text-red-500 rounded-xl border border-slate-800 hover:border-red-500/40 transition-all shadow-md active:scale-95"
-            title="Quit to Menu"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
-          <button 
-            onClick={() => setIsHistoryModalOpen(true)}
-            className="p-2.5 bg-slate-900 hover:bg-slate-800 text-slate-600 hover:text-white rounded-xl border border-slate-800 transition-all shadow-md active:scale-95"
-            title="Game History"
-          >
-            <History className="w-5 h-5" />
-          </button>
-          <button 
-            onClick={() => setIsSettingsModalOpen(true)}
-            className="p-2.5 bg-slate-900 hover:bg-slate-800 text-slate-600 hover:text-white rounded-xl border border-slate-800 transition-all shadow-md active:scale-95"
-            title="Settings"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
+          <div className="h-8 w-px bg-slate-800 mx-1" />
+          <button onClick={onRestart} className="p-2 bg-slate-900 hover:bg-yellow-500/10 text-slate-600 hover:text-yellow-500 rounded-lg border border-slate-800 transition-all active:scale-95"><RefreshCw className="w-4 h-4" /></button>
+          <button onClick={onQuit} className="p-2 bg-slate-900 hover:bg-red-500/10 text-slate-600 hover:text-red-500 rounded-lg border border-slate-800 transition-all active:scale-95"><LogOut className="w-4 h-4" /></button>
+          <button onClick={() => setIsHistoryModalOpen(true)} className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-600 hover:text-white rounded-lg border border-slate-800 transition-all active:scale-95"><History className="w-4 h-4" /></button>
+          <button onClick={() => setIsSettingsModalOpen(true)} className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-600 hover:text-white rounded-lg border border-slate-800 transition-all active:scale-95"><Settings className="w-4 h-4" /></button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col xl:flex-row gap-12 w-full max-w-7xl items-start justify-center relative z-10">
-        {viewMode === 'unified' ? (
-          <div className="flex flex-col gap-8 items-center flex-1 max-w-2xl">
-            <div className="flex flex-col items-center gap-3 text-center">
-              <h2 className="text-3xl font-bold text-white flex items-center gap-4 tracking-tight uppercase">
-                Tactical Overlay
-                <span className="text-[9px] font-mono font-bold text-cyan-400 bg-cyan-400/10 px-3 py-0.5 rounded-lg border border-cyan-400/30 animate-pulse">LIVE</span>
-              </h2>
-              <p className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest">Combined Battle Map</p>
-            </div>
-            
-            <UnifiedGrid 
-              myGrid={viewingPlayer.grid}
-              opponentGrid={opponent.grid}
-              onCellClick={(r, c) => isMyTurn && onFire(r, c)}
-              activePlayer={gameState.activePlayer}
-            />
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={message}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                className={`
-                  w-full p-6 rounded-2xl font-mono font-bold text-center uppercase tracking-widest text-xl border-2 shadow-lg relative overflow-hidden
-                  ${message.includes('HIT') 
-                    ? 'bg-red-950/40 text-red-500 border-red-500/40 shadow-red-500/10' 
-                    : 'bg-slate-900/60 text-slate-500 border-slate-800 shadow-black/20'}
-                `}
-              >
-                {message}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        ) : (
-          <div className="flex flex-col lg:flex-row gap-12 flex-1 items-start justify-center">
-            {/* Tracking Grid (Opponent's Board) */}
-            <div className="flex flex-col gap-8 items-center">
-              <div className="flex flex-col items-center gap-4 text-center">
-                <h2 className="text-3xl font-bold text-white flex items-center gap-6 tracking-tight uppercase">
-                  Tracking Grid
-                  <div className="p-3 bg-red-500/10 rounded-2xl border-2 border-red-500/30">
-                    <Target className="w-8 h-8 text-red-500" />
-                  </div>
-                </h2>
-                <p className="text-xs font-mono font-bold text-slate-600 uppercase tracking-[0.5em]">Strike {opponent.name}</p>
-                <div className="mt-4 px-6 py-2 bg-red-500/10 border-2 border-red-500/30 rounded-full">
-                  <span className="text-xs font-mono font-bold text-red-500 uppercase tracking-widest">
-                    {totalLettersLeft} Units Remaining
-                  </span>
-                </div>
-              </div>
-              
-              <Grid 
-                grid={opponent.grid} 
-                isEnemy={true}
-                onCellClick={isMyTurn ? onFire : undefined}
+      <div className="flex flex-row gap-8 w-full max-w-[1080px] items-start justify-center relative z-10">
+        
+        {/* Left Side: Grids */}
+        <div className="flex-1 flex flex-col items-center">
+          {viewMode === 'unified' ? (
+            <div className="flex flex-col gap-6 items-center w-full">
+              <UnifiedGrid 
+                myGrid={viewingPlayer.grid}
+                opponentGrid={opponent.grid}
+                onCellClick={handleGridClick}
+                onCellMouseEnter={handleMouseEnter}
+                onCellMouseLeave={() => setPreviewCells([])}
+                previewCells={previewCells}
                 activePlayer={gameState.activePlayer}
-                showLabels={true}
               />
-            </div>
 
-            {/* Home Grid (Your Board) */}
-            <div className="flex flex-col gap-8 items-center">
-              <div className="flex flex-col items-center gap-4 text-center">
-                <h2 className="text-3xl font-bold text-white flex items-center gap-6 tracking-tight uppercase">
-                  Home Grid
-                  <div className="p-3 bg-cyan-500/10 rounded-2xl border-2 border-cyan-500/30">
-                    <Shield className="w-8 h-8 text-cyan-500" />
-                  </div>
-                </h2>
-                <p className="text-xs font-mono font-bold text-slate-600 uppercase tracking-[0.5em]">Defend {viewingPlayer.name}</p>
-              </div>
-              
-              <Grid 
-                grid={viewingPlayer.grid} 
-                isEnemy={false}
-                showLabels={false}
-              />
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={message}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className={`
+                    w-full p-4 rounded-xl font-mono font-bold text-center uppercase tracking-widest text-sm border-2 shadow-lg
+                    ${message.includes('HIT') 
+                      ? 'bg-red-950/40 text-red-500 border-red-500/40 shadow-red-500/10' 
+                      : 'bg-slate-900/60 text-slate-500 border-slate-800 shadow-black/20'}
+                  `}
+                >
+                  {isTargeting ? `SELECT TARGET FOR ${currentEffect?.name}` : message}
+                </motion.div>
+              </AnimatePresence>
             </div>
-          </div>
-        )}
-
-        {/* Action Panel */}
-        <div className="flex flex-col gap-6 w-full xl:w-[360px] bg-slate-900/40 p-6 rounded-2xl border-2 border-slate-800/60 backdrop-blur-xl shadow-xl">
-          
-          {/* Opponent's Bank (Strategic Info) */}
-          <div className="flex flex-col gap-3 p-4 bg-slate-950/60 rounded-xl border border-slate-800 shadow-inner relative overflow-hidden">
-            <div className="absolute inset-0 grid-blueprint opacity-10 pointer-events-none" />
-            
-            <div className="flex justify-between items-center px-1 relative z-10">
-              <h4 className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                Opponent Bank
-                <span className="text-slate-700">({opponent.name})</span>
-              </h4>
-              <div className="w-8 h-8 flex items-center justify-center bg-slate-900 rounded-lg border border-slate-800 text-[10px] font-mono font-bold text-slate-500">
-                {opponent.bank.length}
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2 min-h-[50px] p-3 bg-slate-900/40 rounded-lg border border-slate-800/40 relative z-10">
-              {opponent.bank.length > 0 ? (
-                opponent.bank.map((tile, idx) => (
-                  <div 
-                    key={`${tile.id}-${idx}`}
-                    className={`
-                      w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold border shadow-md transition-transform hover:scale-110
-                      ${tile.tier === 'common' ? 'bg-slate-900 border-slate-700 text-slate-500' : ''}
-                      ${tile.tier === 'uncommon' ? 'bg-slate-900 border-emerald-500/40 text-emerald-500' : ''}
-                      ${tile.tier === 'rare' ? 'bg-slate-900 border-amber-500/40 text-amber-500' : ''}
-                      ${tile.tier === 'wildcard' ? 'bg-slate-900 border-purple-500/40 text-purple-500' : ''}
-                    `}
-                  >
-                    {tile.letter}
+          ) : (
+            <div className="flex flex-col gap-6 items-center w-full">
+              {/* Tracking Grid */}
+              <div className="flex flex-col gap-4 items-center">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-xl font-bold text-white uppercase tracking-tight">Tracking</h2>
+                  <div className="px-3 py-1 bg-red-500/10 border border-red-500/30 rounded-full">
+                    <span className="text-[9px] font-mono font-bold text-red-500 uppercase tracking-widest">
+                      {totalLettersLeft} Units
+                    </span>
                   </div>
-                ))
-              ) : (
-                <div className="w-full flex items-center justify-center py-2">
-                  <span className="text-[9px] font-mono text-slate-800 font-bold uppercase tracking-widest italic opacity-60">No letters harvested</span>
                 </div>
+                <Grid 
+                  grid={opponent.grid} 
+                  isEnemy={true}
+                  onCellClick={handleGridClick}
+                  onCellMouseEnter={handleMouseEnter}
+                  onCellMouseLeave={() => setPreviewCells([])}
+                  previewCells={previewCells}
+                  activePlayer={gameState.activePlayer}
+                  showLabels={true}
+                />
+              </div>
+
+              {/* Home Grid */}
+              <div className="flex flex-col gap-4 items-center">
+                <h2 className="text-xl font-bold text-white uppercase tracking-tight">Home</h2>
+                <Grid 
+                  grid={viewingPlayer.grid} 
+                  isEnemy={false}
+                  showLabels={false}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Side: Action Panel */}
+        <div className="w-[320px] flex flex-col gap-4 h-full">
+          
+          {/* Opponent's Bank (Top) */}
+          <LetterBank bank={opponent.bank} title={`Opponent Bank (${opponent.name})`} />
+
+          {/* Word Making Area (Middle) */}
+          <div className="flex flex-col gap-4 p-4 bg-slate-900/60 rounded-xl border-2 border-slate-800 shadow-xl relative overflow-hidden">
+            <div className="absolute inset-0 grid-blueprint opacity-5 pointer-events-none" />
+            
+            <div className="flex flex-col gap-2">
+              <label className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest ml-1">
+                Word Armament
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={bombWord}
+                  onChange={(e) => {
+                    setBombWord(e.target.value.toUpperCase());
+                    setBombError(null);
+                    setIsTargeting(false);
+                  }}
+                  disabled={!isMyTurn}
+                  placeholder="TYPE WORD..."
+                  className="w-full bg-slate-950 border-2 border-slate-800 rounded-lg p-3 text-xl font-bold text-white placeholder:text-slate-800 focus:border-yellow-500/40 focus:outline-none transition-all uppercase"
+                />
+              </div>
+              {bombError && (
+                <span className="text-[8px] font-mono font-bold text-red-500 uppercase tracking-widest ml-1">
+                  // {bombError}
+                </span>
               )}
             </div>
+
+            {currentEffect && (
+              <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800 flex flex-col gap-1">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-widest">{currentEffect.name}</span>
+                  <span className="text-[8px] font-mono font-bold text-slate-600">{wordLen} UNITS</span>
+                </div>
+                <p className="text-[8px] font-mono text-slate-500 leading-tight uppercase tracking-widest italic">
+                  {currentEffect.description}
+                </p>
+              </div>
+            )}
+
+            {isTargeting ? (
+              <div className="flex flex-col gap-2">
+                {(wordLen === 3 || wordLen === 5 || wordLen >= 8) && (
+                  <div className="flex gap-2 p-1 bg-slate-950 rounded-lg border border-slate-800">
+                    <button 
+                      onClick={() => setRowColToggle('row')}
+                      className={`flex-1 py-1.5 rounded text-[8px] font-mono font-bold transition-all ${rowColToggle === 'row' ? 'bg-yellow-500 text-slate-950' : 'text-slate-600'}`}
+                    >ROW</button>
+                    <button 
+                      onClick={() => setRowColToggle('col')}
+                      className={`flex-1 py-1.5 rounded text-[8px] font-mono font-bold transition-all ${rowColToggle === 'col' ? 'bg-yellow-500 text-slate-950' : 'text-slate-600'}`}
+                    >COL</button>
+                  </div>
+                )}
+                <button
+                  onClick={() => setIsTargeting(false)}
+                  className="w-full p-3 bg-red-900/20 text-red-500 border border-red-500/40 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-red-900/40 transition-all"
+                >
+                  CANCEL TARGETING
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleStartTargeting}
+                disabled={!isMyTurn || wordLen < 3}
+                className={`
+                  w-full p-4 rounded-lg font-bold text-lg transition-all flex items-center justify-center gap-3 border-2 active:scale-95
+                  ${!isMyTurn || wordLen < 3
+                    ? 'bg-slate-900 text-slate-800 border-slate-800 cursor-not-allowed opacity-40' 
+                    : 'bg-slate-900 text-white border-slate-800 hover:border-yellow-500/50 hover:text-yellow-500 shadow-lg'}
+                `}
+              >
+                <Zap className={`w-5 h-5 ${isMyTurn && wordLen >= 3 ? 'text-yellow-500' : 'text-slate-800'}`} />
+                <span className="uppercase">FIRE BOMB</span>
+              </button>
+            )}
           </div>
 
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between px-1">
-              <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                Your Bank
-                <div className="w-8 h-8 flex items-center justify-center bg-slate-950 rounded-lg border border-slate-800 text-[10px] font-mono font-bold text-slate-500">
-                  {viewingPlayer.bank.length}
-                </div>
-              </h3>
-              <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full ${isMyTurn ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]' : 'bg-slate-800'}`} />
-                <span className="text-[9px] font-mono font-bold text-slate-600 uppercase tracking-widest">
-                  {isMyTurn ? 'Active' : 'Standby'}
-                </span>
-              </div>
-            </div>
-            
-            <LetterBank bank={viewingPlayer.bank} title="Available Letters" />
-            
-            <button
-              onClick={() => setIsBombModalOpen(true)}
-              disabled={viewingPlayer.bank.length < 3 || !isMyTurn}
-              className={`
-                w-full p-6 rounded-2xl font-bold text-2xl transition-all flex items-center justify-center gap-4 relative overflow-hidden group border-2 active:scale-95
-                ${viewingPlayer.bank.length < 3 || !isMyTurn
-                  ? 'bg-slate-900 text-slate-800 border-slate-800 cursor-not-allowed opacity-40' 
-                  : 'bg-slate-900 text-white border-slate-800 hover:border-yellow-500/50 hover:text-yellow-500 shadow-lg'}
-              `}
-            >
-              <Zap className={`w-8 h-8 transition-transform group-hover:scale-110 ${viewingPlayer.bank.length >= 3 && isMyTurn ? 'text-yellow-500' : 'text-slate-800'}`} />
-              <span className="tracking-tight uppercase">Word Bomb</span>
-            </button>
+          {/* Player's Bank (Bottom) */}
+          <div className="flex flex-col gap-3 flex-1">
+            <LetterBank bank={viewingPlayer.bank} title="Your Bank" />
 
             <button
               onClick={onSkipTurn}
               disabled={!isMyTurn}
               className={`
-                w-full p-3 rounded-xl font-mono font-bold text-[10px] tracking-widest transition-all flex items-center justify-center gap-3 border shadow-md active:scale-95
+                w-full p-2.5 rounded-lg font-mono font-bold text-[9px] tracking-widest transition-all flex items-center justify-center gap-2 border shadow-md active:scale-95
                 ${!isMyTurn
                   ? 'bg-slate-900/60 text-slate-800 border-slate-800 cursor-not-allowed'
                   : 'bg-slate-950 text-slate-600 border-slate-800 hover:bg-slate-900 hover:text-white hover:border-slate-700'}
               `}
             >
-              <LogOut className="w-4 h-4 rotate-90" />
+              <LogOut className="w-3.5 h-3.5 rotate-90" />
               SKIP TURN
             </button>
           </div>
 
           {/* Error Message */}
           {error && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-red-950/40 border-2 border-red-500/40 p-4 rounded-xl text-red-500 text-[10px] font-mono font-bold uppercase tracking-widest flex items-center gap-3 shadow-lg"
-            >
-              <Info className="w-5 h-5 shrink-0" />
-              <span className="leading-relaxed">{error}</span>
-            </motion.div>
-          )}
-
-          {/* AI Info */}
-          {isAIGame && (
-            <div className="p-4 bg-slate-950/60 rounded-xl border-2 border-slate-800/60 relative overflow-hidden">
-              <div className="absolute inset-0 grid-blueprint opacity-10 pointer-events-none" />
-              <div className="flex items-center gap-3 text-slate-600 mb-2 relative z-10">
-                <Users className="w-4 h-4" />
-                <span className="text-[9px] font-mono font-bold uppercase tracking-widest">AI Subroutine Active</span>
-              </div>
-              <p className="text-[9px] text-slate-700 font-mono leading-relaxed uppercase tracking-widest relative z-10">
-                The computer will strike back after your turn. It harvests letters to cast bombs just like you.
-              </p>
+            <div className="bg-red-950/40 border border-red-500/40 p-3 rounded-lg text-red-500 text-[8px] font-mono font-bold uppercase tracking-widest flex items-center gap-2 shadow-lg">
+              <Info className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
         </div>
       </div>
 
-
-      <WordBombModal 
-        isOpen={isBombModalOpen}
-        onClose={() => setIsBombModalOpen(false)}
-        bank={viewingPlayer.bank}
-        onExecute={onExecuteBomb}
-        playedWords={gameState.playedWords}
-      />
-
+      {/* Modals */}
       <GameHistoryModal
         isOpen={isHistoryModalOpen}
         onClose={() => setIsHistoryModalOpen(false)}
