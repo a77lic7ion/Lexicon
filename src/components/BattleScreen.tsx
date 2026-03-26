@@ -240,7 +240,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
               </div>
               <div className="h-px bg-slate-800 w-full" />
               <div className="flex flex-col gap-1">
-                <span className="text-[9px] font-mono text-slate-500 uppercase italic">Current Mode: {gameState.gameMode.toUpperCase()}</span>
+                <span className="text-[9px] font-mono text-slate-500 uppercase italic">Current Mode: {gameState.winMode.toUpperCase()}</span>
               </div>
             </div>
           </div>
@@ -283,7 +283,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
                 <span className="text-[9px] font-mono text-yellow-500">TURN {gameState.turnCount + 1}</span>
               </div>
               <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 custom-scrollbar">
-                {gameState.history.slice(-10).reverse().map((entry, idx) => (
+                {gameState.history.slice(0, 10).map((entry, idx) => (
                   <div key={idx} className="flex flex-col gap-1 border-l-2 border-slate-800 pl-3 py-1">
                     <div className="flex justify-between items-center">
                       <span className={`text-[9px] font-bold uppercase ${entry.playerId === 1 ? 'text-blue-400' : 'text-red-400'}`}>

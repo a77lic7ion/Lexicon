@@ -431,7 +431,7 @@ export const useGameLogic = () => {
     });
   };
 
-  const checkWin = (opponent: PlayerState, mode: WinMode): boolean => {
+  const checkWin = (opponent: PlayerState, mode: WinMode, lastBombLength?: number): boolean => {
     const allTiles = new Set(opponent.grid.flat().filter(c => c.tileId).map(c => c.tileId));
     const destroyedTiles = Array.from(allTiles).filter(tid => 
       opponent.grid.flat().filter(c => c.tileId === tid).every(c => c.isHit)
@@ -443,9 +443,9 @@ export const useGameLogic = () => {
     if (mode === 'classic') {
       return destroyedTiles.length >= 15;
     } else if (mode === 'lexicon') {
-      return activePlayer.score >= 100;
+      return (lastBombLength !== undefined && lastBombLength >= 8);
     } else if (mode === 'hybrid') {
-      return destroyedTiles.length >= 15 || activePlayer.score >= 100;
+      return destroyedTiles.length >= 10 || (lastBombLength !== undefined && lastBombLength >= 7);
     }
     return false;
   };
@@ -753,7 +753,7 @@ export const useGameLogic = () => {
         tilesDestroyed: newTilesDestroyed,
         totalHits: newTotalHits
       };
-      const isGameOver = checkWin(updatedOpponent, prev.winMode);
+      const isGameOver = checkWin(updatedOpponent, prev.winMode, length);
       const nextPhase = isGameOver ? 'gameover' : 'battle';
 
       if (isGameOver) playSound(SOUNDS.WIN);
