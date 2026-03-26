@@ -28,6 +28,9 @@ export interface PlayerState {
   tilesPlaced: number;
   isReady: boolean;
   score: number;
+  bombsPlayed: number;
+  tilesDestroyed: number;
+  totalHits: number;
   isAI?: boolean;
   difficulty?: Difficulty;
   placementHistory?: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[];
@@ -56,4 +59,9 @@ export interface GameState {
   history: HistoryEvent[];
   winner: 1 | 2 | null;
   turnCount: number;
+  lastAction?: {
+    type: 'fire' | 'bomb';
+    cells: { r: number; c: number }[];
+    playerId: 1 | 2;
+  };
 }

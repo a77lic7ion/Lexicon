@@ -205,43 +205,136 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 bg-slate-950 min-h-screen items-center grid-blueprint relative overflow-hidden">
+    <div className="flex flex-row gap-0 bg-slate-950 min-h-screen grid-blueprint relative overflow-hidden">
       {/* Background Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-cyan-900/5 blur-[120px] rounded-full pointer-events-none" />
 
-      {/* Header */}
-      <div className="flex justify-between items-center w-full max-w-[1080px] relative z-10 px-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-4 drop-shadow-lg">
-            LEXICON
-            <span className="text-[9px] font-mono font-bold text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-lg border border-yellow-500/30 uppercase tracking-widest">
-              TURN {gameState.turnCount + 1}
-            </span>
-          </h1>
-        </div>
+      {/* Sidebar */}
+      <div className="w-80 border-r border-slate-800 bg-slate-900/50 backdrop-blur-xl flex flex-col h-screen relative z-20 shrink-0">
+        <div className="p-6 flex flex-col gap-8 h-full overflow-y-auto custom-scrollbar">
+          {/* Header */}
+          <div className="flex flex-col gap-2">
+            <h1 className="text-3xl font-black text-white tracking-tighter flex items-center gap-3 italic">
+              LEXICON
+              <span className="text-[10px] not-italic font-mono font-bold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded border border-yellow-500/30 uppercase tracking-widest">
+                v2.0
+              </span>
+            </h1>
+            <div className="h-1 w-12 bg-yellow-500 rounded-full" />
+          </div>
 
-        <div className="flex gap-2">
-          <button onClick={onRestart} className="p-2 bg-slate-900 hover:bg-yellow-500/10 text-slate-600 hover:text-yellow-500 rounded-lg border border-slate-800 transition-all active:scale-95"><RefreshCw className="w-4 h-4" /></button>
-          <button onClick={onQuit} className="p-2 bg-slate-900 hover:bg-red-500/10 text-slate-600 hover:text-red-500 rounded-lg border border-slate-800 transition-all active:scale-95"><LogOut className="w-4 h-4" /></button>
-          <button onClick={() => setIsHistoryModalOpen(true)} className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-600 hover:text-white rounded-lg border border-slate-800 transition-all active:scale-95"><History className="w-4 h-4" /></button>
-          <button onClick={() => setIsSettingsModalOpen(true)} className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-600 hover:text-white rounded-lg border border-slate-800 transition-all active:scale-95"><Settings className="w-4 h-4" /></button>
+          {/* Winning Conditions */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-slate-500">
+              <Trophy className="w-4 h-4" />
+              <span className="text-[10px] font-mono font-black uppercase tracking-widest">Victory Protocol</span>
+            </div>
+            <div className="bg-slate-950/50 rounded-xl border border-slate-800 p-4 flex flex-col gap-3">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-mono text-slate-400 uppercase">Classic Mode</span>
+                <span className="text-[10px] font-mono font-bold text-white">15 TILES</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-mono text-slate-400 uppercase">Lexicon Mode</span>
+                <span className="text-[10px] font-mono font-bold text-white">100 PTS</span>
+              </div>
+              <div className="h-px bg-slate-800 w-full" />
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] font-mono text-slate-500 uppercase italic">Current Mode: {gameState.gameMode.toUpperCase()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Block */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-slate-500">
+              <Target className="w-4 h-4" />
+              <span className="text-[10px] font-mono font-black uppercase tracking-widest">Combat Stats</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-slate-950/50 rounded-xl border border-slate-800 p-3 flex flex-col gap-1">
+                <span className="text-[8px] font-mono text-slate-500 uppercase">Tiles Taken</span>
+                <span className="text-xl font-black text-emerald-500">{viewingPlayer.tilesDestroyed}</span>
+              </div>
+              <div className="bg-slate-950/50 rounded-xl border border-slate-800 p-3 flex flex-col gap-1">
+                <span className="text-[8px] font-mono text-slate-500 uppercase">Total Hits</span>
+                <span className="text-xl font-black text-red-500">{viewingPlayer.totalHits}</span>
+              </div>
+              <div className="bg-slate-950/50 rounded-xl border border-slate-800 p-3 flex flex-col gap-1">
+                <span className="text-[8px] font-mono text-slate-500 uppercase">Bombs Cast</span>
+                <span className="text-xl font-black text-yellow-500">{viewingPlayer.bombsPlayed}</span>
+              </div>
+              <div className="bg-slate-950/50 rounded-xl border border-slate-800 p-3 flex flex-col gap-1">
+                <span className="text-[8px] font-mono text-slate-500 uppercase">Total Score</span>
+                <span className="text-xl font-black text-blue-500">{viewingPlayer.score}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Live Turn Ticker */}
+          <div className="flex flex-col gap-3 flex-1 min-h-0">
+            <div className="flex items-center gap-2 text-slate-500">
+              <History className="w-4 h-4" />
+              <span className="text-[10px] font-mono font-black uppercase tracking-widest">Turn Ticker</span>
+            </div>
+            <div className="bg-slate-950/50 rounded-xl border border-slate-800 flex-1 overflow-hidden flex flex-col">
+              <div className="p-3 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
+                <span className="text-[9px] font-mono font-bold text-slate-400 uppercase">Recent Actions</span>
+                <span className="text-[9px] font-mono text-yellow-500">TURN {gameState.turnCount + 1}</span>
+              </div>
+              <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 custom-scrollbar">
+                {gameState.history.slice(-10).reverse().map((entry, idx) => (
+                  <div key={idx} className="flex flex-col gap-1 border-l-2 border-slate-800 pl-3 py-1">
+                    <div className="flex justify-between items-center">
+                      <span className={`text-[9px] font-bold uppercase ${entry.playerId === 1 ? 'text-blue-400' : 'text-red-400'}`}>
+                        {gameState.players[entry.playerId].name}
+                      </span>
+                      <span className="text-[8px] font-mono text-slate-600">#{gameState.history.length - idx}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-300 font-mono leading-tight">
+                      {entry.action.toUpperCase()} {entry.result && `— ${entry.result.toUpperCase()}`}
+                    </p>
+                  </div>
+                ))}
+                {gameState.history.length === 0 && (
+                  <div className="h-full flex items-center justify-center text-slate-700 italic text-[10px] font-mono">
+                    Waiting for first move...
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="flex gap-2 pt-4 border-t border-slate-800 mt-auto">
+            <button onClick={onRestart} className="flex-1 p-2 bg-slate-900 hover:bg-yellow-500/10 text-slate-600 hover:text-yellow-500 rounded-lg border border-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+              <RefreshCw className="w-3 h-3" />
+              Reset
+            </button>
+            <button onClick={onQuit} className="flex-1 p-2 bg-slate-900 hover:bg-red-500/10 text-slate-600 hover:text-red-500 rounded-lg border border-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+              <LogOut className="w-3 h-3" />
+              Quit
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Main Content: Vertical Stack */}
-      <div className="flex flex-col gap-4 w-full max-w-[1080px] items-center relative z-10">
-        
-        {/* 1. Opponent Rack (Thin) */}
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col gap-4 p-8 items-center overflow-y-auto relative z-10 custom-scrollbar">
+        {/* Opponent Rack */}
         <div className="w-full max-w-[600px] flex flex-col gap-2">
           <div className="flex justify-between items-center px-2">
             <span className="text-[10px] font-mono font-black text-slate-500 uppercase tracking-widest">Opponent: {opponent.name}</span>
-            <span className="text-[10px] font-mono font-black text-blue-500 uppercase tracking-widest">Score: {opponent.score}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-mono font-black text-slate-600 uppercase tracking-widest">Tiles: {opponent.grid.flat().filter(c => c.tileId && !c.isHit).length}</span>
+              <span className="text-[10px] font-mono font-black text-blue-500 uppercase tracking-widest">Score: {opponent.score}</span>
+            </div>
           </div>
           <LetterBank bank={opponent.bank} title="" />
         </div>
 
-        {/* 2. Central Board (Largest) */}
-        <div className="flex flex-col items-center w-full overflow-x-auto py-2">
+        {/* Central Board */}
+        <div className="flex flex-col items-center w-full py-2">
           <UnifiedGrid 
             myGrid={viewingPlayer.grid}
             opponentGrid={opponent.grid}
@@ -250,10 +343,11 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
             onCellMouseLeave={() => setPreviewCells([])}
             previewCells={previewCells}
             activePlayer={gameState.activePlayer}
+            lastAction={gameState.lastAction}
           />
         </div>
 
-        {/* 3. Player Rack (Thin) */}
+        {/* Player Rack */}
         <div className="w-full max-w-[600px] flex flex-col gap-2">
           <div className="flex justify-between items-center px-2">
             <span className="text-[10px] font-mono font-black text-slate-500 uppercase tracking-widest">You: {viewingPlayer.name}</span>
@@ -262,9 +356,8 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
           <LetterBank bank={viewingPlayer.bank} title="" />
         </div>
 
-        {/* 4. Action Area */}
-        <div className="w-full max-w-[600px] flex flex-col gap-4">
-          
+        {/* Action Area */}
+        <div className="w-full max-w-[600px] flex flex-col gap-4 mt-4">
           {/* Message Banner */}
           <AnimatePresence mode="wait">
             <motion.div
@@ -369,6 +462,12 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
             >
               <LogOut className="w-3.5 h-3.5 rotate-90" />
               SKIP TURN
+            </button>
+            <button onClick={() => setIsSettingsModalOpen(true)} className="p-2.5 bg-slate-950 text-slate-600 border border-slate-800 rounded-lg hover:text-white transition-all active:scale-95">
+              <Settings className="w-4 h-4" />
+            </button>
+            <button onClick={() => setIsHistoryModalOpen(true)} className="p-2.5 bg-slate-950 text-slate-600 border border-slate-800 rounded-lg hover:text-white transition-all active:scale-95">
+              <History className="w-4 h-4" />
             </button>
           </div>
 

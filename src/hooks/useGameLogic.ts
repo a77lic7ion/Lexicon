@@ -33,6 +33,9 @@ const initialPlayerState = (id: 1 | 2): PlayerState => ({
   tilesPlaced: 0,
   isReady: false,
   score: 0,
+  bombsPlayed: 0,
+  tilesDestroyed: 0,
+  totalHits: 0,
   isAI: false,
   difficulty: 'medium',
   placementHistory: [],
@@ -79,6 +82,7 @@ export const useGameLogic = () => {
       history: [],
       winner: null,
       turnCount: 0,
+      lastAction: undefined,
     }));
     setMessage('Place your tiles.');
     setError(null);
@@ -560,15 +564,40 @@ export const useGameLogic = () => {
         timestamp: Date.now(),
       };
 
+      // Check if tile was destroyed to update stats
+      let newTilesDestroyed = updatedActive.tilesDestroyed;
+      let newTotalHits = updatedActive.totalHits;
+      if (hit) newTotalHits++;
+
+      if (cell.tileId) {
+        const isDestroyed = newGrid.flat().filter(c => c.tileId === cell.tileId).every(c => c.isHit);
+        if (isDestroyed && cell.isHit) { // If it just became hit and all are hit
+          // Wait, we need to be careful not to double count.
+          // Let's check if it was already destroyed.
+          // Actually, if cell.isHit was false and now it's true, and all are hit, it's newly destroyed.
+          // But Mirror logic makes it tricky.
+          // Let's just recalculate the total destroyed tiles for simplicity.
+          const allTileIds = new Set(newGrid.flat().filter(c => c.tileId).map(c => c.tileId));
+          newTilesDestroyed = Array.from(allTileIds).filter(tid => 
+            newGrid.flat().filter(c => c.tileId === tid).every(c => c.isHit)
+          ).length;
+        }
+      }
+
       return {
         ...prev,
         phase: nextPhase,
         activePlayer: nextPlayer,
         history: [historyEvent, ...prev.history],
+        lastAction: {
+          type: 'fire',
+          cells: [{ r: row, c: col }],
+          playerId: activeId
+        },
         players: {
           ...prev.players,
           [opponentId]: updatedOpponent,
-          [activeId]: updatedActive,
+          [activeId]: { ...updatedActive, tilesDestroyed: newTilesDestroyed, totalHits: newTotalHits },
         },
         winner: nextPhase === 'gameover' ? activeId : null,
         turnCount: prev.turnCount + 1,
@@ -618,17 +647,21 @@ export const useGameLogic = () => {
     const length = upperWord.length;
     const opponent = gameState.players[opponentId];
     const newGrid = [...opponent.grid.map(r => [...r])];
+    const affectedCells: { r: number; c: number }[] = [];
 
     if (length === 3) { // Spark
       if (target.row !== undefined) {
+        for (let c = 0; c < GRID_SIZE; c++) affectedCells.push({ r: target.row, c });
         const hasTile = newGrid[target.row].some(c => c.tileId);
         setMessage(hasTile ? `Spark: Tile exists in row ${target.row + 1}` : `Spark: No tiles in row ${target.row + 1}`);
       } else if (target.col !== undefined) {
+        for (let r = 0; r < GRID_SIZE; r++) affectedCells.push({ r, c: target.col! });
         const hasTile = newGrid.map(r => r[target.col!]).some(c => c.tileId);
         setMessage(hasTile ? `Spark: Tile exists in column ${String.fromCharCode(65 + target.col!)}` : `Spark: No tiles in column ${String.fromCharCode(65 + target.col!)}`);
       }
     } else if (length === 4) { // Blast
       if (target.cell) {
+        affectedCells.push(target.cell);
         const cell = newGrid[target.cell.r][target.cell.c];
         if (cell.tileId) {
           cell.isHit = true;
@@ -650,9 +683,15 @@ export const useGameLogic = () => {
       }
     } else if (length === 5) { // Surge
       if (target.row !== undefined) {
-        newGrid[target.row].forEach(c => { if (c.tileId) c.isRevealed = true; });
+        for (let c = 0; c < GRID_SIZE; c++) {
+          affectedCells.push({ r: target.row, c });
+          if (newGrid[target.row][c].tileId) newGrid[target.row][c].isRevealed = true;
+        }
       } else if (target.col !== undefined) {
-        newGrid.forEach(r => { if (r[target.col!].tileId) r[target.col!].isRevealed = true; });
+        for (let r = 0; r < GRID_SIZE; r++) {
+          affectedCells.push({ r, c: target.col! });
+          if (newGrid[r][target.col!].tileId) newGrid[r][target.col!].isRevealed = true;
+        }
       }
     } else if (length === 6) { // Storm
       if (target.cell) {
@@ -661,6 +700,7 @@ export const useGameLogic = () => {
             const r = target.cell.r + dr;
             const c = target.cell.c + dc;
             if (r < GRID_SIZE && c < GRID_SIZE) {
+              affectedCells.push({ r, c });
               const cell = newGrid[r][c];
               if (cell.tileId) cell.isHit = true;
               else cell.isMiss = true;
@@ -683,15 +723,36 @@ export const useGameLogic = () => {
       }
     } else if (length >= 8) { // Obliterate
       if (target.row !== undefined) {
-        newGrid[target.row].forEach(c => { if (c.tileId) c.isHit = true; else c.isMiss = true; });
+        for (let c = 0; c < GRID_SIZE; c++) {
+          affectedCells.push({ r: target.row, c });
+          if (newGrid[target.row][c].tileId) newGrid[target.row][c].isHit = true; else newGrid[target.row][c].isMiss = true;
+        }
       } else if (target.col !== undefined) {
-        newGrid.forEach(r => { if (r[target.col!].tileId) r[target.col!].isHit = true; else r[target.col!].isMiss = true; });
+        for (let r = 0; r < GRID_SIZE; r++) {
+          affectedCells.push({ r, c: target.col! });
+          if (newGrid[r][target.col!].tileId) newGrid[r][target.col!].isHit = true; else newGrid[r][target.col!].isMiss = true;
+        }
       }
     }
 
     setGameState(prev => {
       const updatedOpponent = { ...prev.players[opponentId], grid: newGrid };
-      const updatedActive = { ...prev.players[activeId], bank: newBank, score: prev.players[activeId].score + wordScore };
+      
+      // Recalculate tiles destroyed and total hits
+      const allTileIds = new Set(newGrid.flat().filter(c => c.tileId).map(c => c.tileId));
+      const newTilesDestroyed = Array.from(allTileIds).filter(tid => 
+        newGrid.flat().filter(c => c.tileId === tid).every(c => c.isHit)
+      ).length;
+      const newTotalHits = newGrid.flat().filter(c => c.isHit).length;
+
+      const updatedActive = { 
+        ...prev.players[activeId], 
+        bank: newBank, 
+        score: prev.players[activeId].score + wordScore,
+        bombsPlayed: prev.players[activeId].bombsPlayed + 1,
+        tilesDestroyed: newTilesDestroyed,
+        totalHits: newTotalHits
+      };
       const isGameOver = checkWin(updatedOpponent, prev.winMode);
       const nextPhase = isGameOver ? 'gameover' : 'battle';
 
@@ -720,6 +781,11 @@ export const useGameLogic = () => {
         activePlayer: opponentId,
         playedWords: [...prev.playedWords, upperWord],
         history: [historyEvent, ...prev.history],
+        lastAction: {
+          type: 'bomb',
+          cells: affectedCells,
+          playerId: activeId
+        },
         players: {
           ...prev.players,
           [opponentId]: updatedOpponent,

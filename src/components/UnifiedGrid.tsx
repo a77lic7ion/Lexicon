@@ -11,6 +11,11 @@ interface UnifiedGridProps {
   onCellMouseLeave?: () => void;
   previewCells?: { r: number; c: number; isValid: boolean }[];
   activePlayer: 1 | 2;
+  lastAction?: {
+    type: 'fire' | 'bomb';
+    cells: { r: number; c: number }[];
+    playerId: 1 | 2;
+  };
 }
 
 export const UnifiedGrid: React.FC<UnifiedGridProps> = ({ 
@@ -20,7 +25,8 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
   onCellMouseEnter,
   onCellMouseLeave,
   previewCells,
-  activePlayer
+  activePlayer,
+  lastAction
 }) => {
   const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
@@ -71,6 +77,15 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
             const iMissedThem = oppCell.isMiss;
             const isOppRevealed = oppCell.isRevealed;
 
+            const isTileDestroyed = oppCell.tileId 
+              ? opponentGrid.flat().filter(c => c.tileId === oppCell.tileId).every(c => c.isHit)
+              : false;
+
+            const isLastActionCell = lastAction?.cells.some(c => c.r === r && c.c === idx % 10);
+            // Wait, idx is from myGrid.flat(), so idx % 10 is the column.
+            // But let's use r and c directly.
+            const isHighlighted = lastAction?.cells.some(cell => cell.r === r && cell.c === c);
+
             const preview = previewCells?.find(p => p.r === r && p.c === c);
 
             // Determine Cell Background
@@ -90,6 +105,10 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
             if (preview) {
               bgColor = preview.isValid ? 'bg-emerald-500/20' : 'bg-red-500/20';
               borderColor = preview.isValid ? 'border-emerald-500/60' : 'border-red-500/60';
+            } else if (isHighlighted) {
+              bgColor = lastAction?.type === 'bomb' ? 'bg-yellow-500/10' : 'bg-red-500/10';
+              borderColor = lastAction?.type === 'bomb' ? 'border-yellow-500/60' : 'border-red-500/60';
+              shadow = lastAction?.type === 'bomb' ? 'shadow-[0_0_15px_rgba(234,179,8,0.3)]' : 'shadow-[0_0_15px_rgba(239,68,68,0.3)]';
             }
 
             return (
@@ -130,10 +149,14 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
                     className="z-10 flex flex-col items-center justify-center"
                   >
                     <Target className="w-5 h-5 text-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.5)]" />
-                    {oppCell.letter && (
-                      <span className="text-[9px] font-bold text-white absolute bg-red-600 px-1 py-0.5 rounded shadow-lg border border-red-400/50 -bottom-0.5 z-20">
+                    {oppCell.letter && isTileDestroyed && (
+                      <motion.span 
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-[9px] font-bold text-white absolute bg-red-600 px-1 py-0.5 rounded shadow-lg border border-red-400/50 -bottom-0.5 z-20"
+                      >
                         {oppCell.letter}
-                      </span>
+                      </motion.span>
                     )}
                   </motion.div>
                 )}
