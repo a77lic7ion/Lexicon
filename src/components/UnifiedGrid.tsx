@@ -41,7 +41,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
           {/* Column Labels */}
           <div className="grid grid-cols-10 gap-1 px-2">
             {cols.map(c => (
-              <div key={c} className="w-8 h-8 flex items-center justify-center text-[10px] font-mono font-bold text-slate-600 tracking-widest uppercase">
+              <div key={c} className="w-12 h-12 flex items-center justify-center text-[12px] font-mono font-bold text-slate-600 tracking-widest uppercase">
                 {c}
               </div>
             ))}
@@ -50,7 +50,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
           {/* Row Labels */}
           <div className="grid grid-rows-10 gap-1 py-2">
             {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="w-8 h-8 flex items-center justify-center text-[10px] font-mono font-bold text-slate-600">
+              <div key={i} className="w-12 h-12 flex items-center justify-center text-[12px] font-mono font-bold text-slate-600">
                 {i + 1}
               </div>
             ))}
@@ -95,12 +95,12 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
             return (
               <motion.div
                 key={`${r}-${c}`}
-                whileHover={{ scale: 1.1, zIndex: 10 }}
+                whileHover={{ scale: 1.05, zIndex: 10 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onCellClick(r, c)}
                 onMouseEnter={() => onCellMouseEnter?.(r, c)}
                 className={`
-                  w-8 h-8 rounded-md border ${borderColor} ${bgColor} ${shadow}
+                  w-12 h-12 rounded-md border ${borderColor} ${bgColor} ${shadow}
                   flex items-center justify-center cursor-pointer relative
                   transition-all duration-200 group
                   hover:border-slate-500 hover:shadow-[0_0_10px_rgba(255,255,255,0.1)]

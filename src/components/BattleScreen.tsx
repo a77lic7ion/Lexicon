@@ -107,7 +107,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
     return null;
   };
 
-  const handleStartTargeting = () => {
+  const handleArmBomb = () => {
     const err = validateBomb();
     if (err) {
       setBombError(err);
@@ -119,6 +119,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
       onExecuteBomb(bombWord.trim().toUpperCase(), {});
       setBombWord('');
       setBombError(null);
+      setIsTargeting(false);
     } else {
       setIsTargeting(true);
       setBombError(null);
@@ -204,20 +205,18 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 bg-slate-950 min-h-screen items-center grid-blueprint relative overflow-hidden">
+    <div className="flex flex-col gap-4 p-4 bg-slate-950 min-h-screen items-center grid-blueprint relative overflow-hidden">
       {/* Background Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-cyan-900/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-cyan-900/5 blur-[120px] rounded-full pointer-events-none" />
 
       {/* Header */}
-      <div className="flex justify-between items-center w-full max-w-[1080px] relative z-10">
+      <div className="flex justify-between items-center w-full max-w-[1080px] relative z-10 px-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-4 drop-shadow-lg">
+          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-4 drop-shadow-lg">
             LEXICON
-            <div className="flex flex-col items-start">
-              <span className="text-[9px] font-mono font-bold text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-lg border border-yellow-500/30 uppercase tracking-widest">
-                TURN {gameState.turnCount + 1}
-              </span>
-            </div>
+            <span className="text-[9px] font-mono font-bold text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-lg border border-yellow-500/30 uppercase tracking-widest">
+              TURN {gameState.turnCount + 1}
+            </span>
           </h1>
         </div>
 
@@ -227,55 +226,58 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
           <button onClick={() => setIsHistoryModalOpen(true)} className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-600 hover:text-white rounded-lg border border-slate-800 transition-all active:scale-95"><History className="w-4 h-4" /></button>
           <button onClick={() => setIsSettingsModalOpen(true)} className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-600 hover:text-white rounded-lg border border-slate-800 transition-all active:scale-95"><Settings className="w-4 h-4" /></button>
         </div>
-      </div>      {/* Main Content */}
-      <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[1080px] items-start justify-center relative z-10">
-        
-        {/* Left Side: Grids */}
-        <div className="flex-1 flex flex-col items-center w-full overflow-x-auto pb-4 lg:pb-0">
-          <div className="flex flex-col gap-6 items-center w-full min-w-[380px]">
-            <UnifiedGrid 
-              myGrid={viewingPlayer.grid}
-              opponentGrid={opponent.grid}
-              onCellClick={handleGridClick}
-              onCellMouseEnter={handleMouseEnter}
-              onCellMouseLeave={() => setPreviewCells([])}
-              previewCells={previewCells}
-              activePlayer={gameState.activePlayer}
-            />
+      </div>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={message}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className={`
-                  w-full p-4 rounded-xl font-mono font-bold text-center uppercase tracking-widest text-sm border-2 shadow-lg
-                  ${message.includes('HIT') 
-                    ? 'bg-red-950/40 text-red-500 border-red-500/40 shadow-red-500/10' 
-                    : 'bg-slate-900/60 text-slate-500 border-slate-800 shadow-black/20'}
-                `}
-              >
-                {isTargeting ? `SELECT TARGET FOR ${currentEffect?.name}` : message}
-              </motion.div>
-            </AnimatePresence>
-          </div>
+      {/* Main Content: Vertical Stack */}
+      <div className="flex flex-col gap-4 w-full max-w-[1080px] items-center relative z-10">
+        
+        {/* 1. Opponent Rack (Thin) */}
+        <div className="w-full max-w-[600px]">
+          <LetterBank bank={opponent.bank} title={`Opponent Bank (${opponent.name})`} />
         </div>
 
-        {/* Right Side: Action Panel */}
-        <div className="w-full lg:w-[320px] flex flex-col gap-4">
-          
-          {/* Opponent's Bank (Top) */}
-          <LetterBank bank={opponent.bank} title={`Opponent Bank (${opponent.name})`} />
+        {/* 2. Central Board (Largest) */}
+        <div className="flex flex-col items-center w-full overflow-x-auto py-2">
+          <UnifiedGrid 
+            myGrid={viewingPlayer.grid}
+            opponentGrid={opponent.grid}
+            onCellClick={handleGridClick}
+            onCellMouseEnter={handleMouseEnter}
+            onCellMouseLeave={() => setPreviewCells([])}
+            previewCells={previewCells}
+            activePlayer={gameState.activePlayer}
+          />
+        </div>
 
-          {/* Word Making Area (Middle) */}
-          <div className="flex flex-col gap-4 p-4 bg-slate-900/60 rounded-xl border-2 border-slate-800 shadow-xl relative overflow-hidden">
-            <div className="absolute inset-0 grid-blueprint opacity-5 pointer-events-none" />
-            
-            <div className="flex flex-col gap-2">
-              <label className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest ml-1">
-                Word Armament
-              </label>
+        {/* 3. Player Rack (Thin) */}
+        <div className="w-full max-w-[600px]">
+          <LetterBank bank={viewingPlayer.bank} title="Your Bank" />
+        </div>
+
+        {/* 4. Action Area */}
+        <div className="w-full max-w-[600px] flex flex-col gap-4">
+          
+          {/* Message Banner */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={message}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className={`
+                w-full p-3 rounded-lg font-mono font-bold text-center uppercase tracking-widest text-[10px] border shadow-md
+                ${message.includes('HIT') 
+                  ? 'bg-red-950/20 text-red-500 border-red-500/30' 
+                  : 'bg-slate-900/40 text-slate-500 border-slate-800'}
+              `}
+            >
+              {isTargeting ? `BOMB ARMED: SELECT TARGET FOR ${currentEffect?.name}` : message}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Word Input & Bomb Button */}
+          <div className="grid grid-cols-[1fr_auto] gap-3 p-3 bg-slate-900/40 rounded-xl border border-slate-800 shadow-xl relative overflow-hidden">
+            <div className="flex flex-col gap-1.5">
               <div className="relative">
                 <input
                   type="text"
@@ -287,7 +289,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
                   }}
                   disabled={!isMyTurn}
                   placeholder="TYPE WORD..."
-                  className="w-full bg-slate-950 border-2 border-slate-800 rounded-lg p-3 text-xl font-bold text-white placeholder:text-slate-800 focus:border-yellow-500/40 focus:outline-none transition-all uppercase"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-lg font-bold text-white placeholder:text-slate-800 focus:border-yellow-500/40 focus:outline-none transition-all uppercase"
                 />
               </div>
               {bombError && (
@@ -295,67 +297,63 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
                   // {bombError}
                 </span>
               )}
+              {currentEffect && (
+                <div className="flex items-center gap-2 px-1">
+                  <span className="text-[9px] font-bold text-yellow-500 uppercase tracking-widest">{currentEffect.name}</span>
+                  <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest italic">
+                    — {currentEffect.description}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {currentEffect && (
-              <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800 flex flex-col gap-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-widest">{currentEffect.name}</span>
-                  <span className="text-[8px] font-mono font-bold text-slate-600">{wordLen} UNITS</span>
+            <div className="flex flex-col gap-2 min-w-[140px]">
+              {isTargeting ? (
+                <div className="flex flex-col gap-2">
+                  {(wordLen === 3 || wordLen === 5 || wordLen >= 8) && (
+                    <div className="flex gap-1 p-1 bg-slate-950 rounded-lg border border-slate-800">
+                      <button 
+                        onClick={() => setRowColToggle('row')}
+                        className={`flex-1 py-1 rounded text-[8px] font-mono font-bold transition-all ${rowColToggle === 'row' ? 'bg-yellow-500 text-slate-950' : 'text-slate-600'}`}
+                      >ROW</button>
+                      <button 
+                        onClick={() => setRowColToggle('col')}
+                        className={`flex-1 py-1 rounded text-[8px] font-mono font-bold transition-all ${rowColToggle === 'col' ? 'bg-yellow-500 text-slate-950' : 'text-slate-600'}`}
+                      >COL</button>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setIsTargeting(false)}
+                    className="w-full p-3 bg-red-900/20 text-red-500 border border-red-500/40 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-red-900/40 transition-all"
+                  >
+                    CANCEL
+                  </button>
                 </div>
-                <p className="text-[8px] font-mono text-slate-500 leading-tight uppercase tracking-widest italic">
-                  {currentEffect.description}
-                </p>
-              </div>
-            )}
-
-            {isTargeting ? (
-              <div className="flex flex-col gap-2">
-                {(wordLen === 3 || wordLen === 5 || wordLen >= 8) && (
-                  <div className="flex gap-2 p-1 bg-slate-950 rounded-lg border border-slate-800">
-                    <button 
-                      onClick={() => setRowColToggle('row')}
-                      className={`flex-1 py-1.5 rounded text-[8px] font-mono font-bold transition-all ${rowColToggle === 'row' ? 'bg-yellow-500 text-slate-950' : 'text-slate-600'}`}
-                    >ROW</button>
-                    <button 
-                      onClick={() => setRowColToggle('col')}
-                      className={`flex-1 py-1.5 rounded text-[8px] font-mono font-bold transition-all ${rowColToggle === 'col' ? 'bg-yellow-500 text-slate-950' : 'text-slate-600'}`}
-                    >COL</button>
-                  </div>
-                )}
+              ) : (
                 <button
-                  onClick={() => setIsTargeting(false)}
-                  className="w-full p-3 bg-red-900/20 text-red-500 border border-red-500/40 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-red-900/40 transition-all"
+                  onClick={handleArmBomb}
+                  disabled={!isMyTurn || wordLen < 3}
+                  className={`
+                    h-full w-full p-3 rounded-lg font-bold text-sm transition-all flex flex-col items-center justify-center gap-1 border active:scale-95
+                    ${!isMyTurn || wordLen < 3
+                      ? 'bg-slate-900 text-slate-800 border-slate-800 cursor-not-allowed opacity-40' 
+                      : 'bg-slate-900 text-white border-slate-800 hover:border-yellow-500/50 hover:text-yellow-500 shadow-lg'}
+                  `}
                 >
-                  CANCEL TARGETING
+                  <Zap className={`w-4 h-4 ${isMyTurn && wordLen >= 3 ? 'text-yellow-500' : 'text-slate-800'}`} />
+                  <span className="uppercase tracking-widest">ARM BOMB</span>
                 </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleStartTargeting}
-                disabled={!isMyTurn || wordLen < 3}
-                className={`
-                  w-full p-4 rounded-lg font-bold text-lg transition-all flex items-center justify-center gap-3 border-2 active:scale-95
-                  ${!isMyTurn || wordLen < 3
-                    ? 'bg-slate-900 text-slate-800 border-slate-800 cursor-not-allowed opacity-40' 
-                    : 'bg-slate-900 text-white border-slate-800 hover:border-yellow-500/50 hover:text-yellow-500 shadow-lg'}
-                `}
-              >
-                <Zap className={`w-5 h-5 ${isMyTurn && wordLen >= 3 ? 'text-yellow-500' : 'text-slate-800'}`} />
-                <span className="uppercase">FIRE BOMB</span>
-              </button>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* Player's Bank (Bottom) */}
-          <div className="flex flex-col gap-3 flex-1">
-            <LetterBank bank={viewingPlayer.bank} title="Your Bank" />
-
+          {/* Footer Actions */}
+          <div className="flex gap-3">
             <button
               onClick={onSkipTurn}
               disabled={!isMyTurn}
               className={`
-                w-full p-2.5 rounded-lg font-mono font-bold text-[9px] tracking-widest transition-all flex items-center justify-center gap-2 border shadow-md active:scale-95
+                flex-1 p-2.5 rounded-lg font-mono font-bold text-[9px] tracking-widest transition-all flex items-center justify-center gap-2 border shadow-md active:scale-95
                 ${!isMyTurn
                   ? 'bg-slate-900/60 text-slate-800 border-slate-800 cursor-not-allowed'
                   : 'bg-slate-950 text-slate-600 border-slate-800 hover:bg-slate-900 hover:text-white hover:border-slate-700'}
@@ -368,8 +366,8 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-950/40 border border-red-500/40 p-3 rounded-lg text-red-500 text-[8px] font-mono font-bold uppercase tracking-widest flex items-center gap-2 shadow-lg">
-              <Info className="w-4 h-4 shrink-0" />
+            <div className="bg-red-950/20 border border-red-500/30 p-2 rounded-lg text-red-500 text-[8px] font-mono font-bold uppercase tracking-widest flex items-center gap-2">
+              <Info className="w-3 h-3 shrink-0" />
               <span>{error}</span>
             </div>
           )}

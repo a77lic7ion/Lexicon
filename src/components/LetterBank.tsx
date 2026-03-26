@@ -11,47 +11,41 @@ interface LetterBankProps {
 
 export const LetterBank: React.FC<LetterBankProps> = ({ bank, onTileClick, title = "Letter Bank" }) => {
   return (
-    <div className="flex flex-col gap-3 p-4 bg-slate-900/60 rounded-2xl border-2 border-slate-800 shadow-xl w-full backdrop-blur-md relative overflow-hidden group">
+    <div className="flex flex-col gap-1 p-2 bg-slate-900/40 rounded-xl border border-slate-800 shadow-lg w-full backdrop-blur-md relative overflow-hidden group">
       <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
       
       <div className="flex justify-between items-center px-1">
-        <h3 className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest italic">
+        <h3 className="text-[7px] font-mono font-bold text-slate-600 uppercase tracking-widest italic">
           {title}
         </h3>
-        <span className="text-[8px] font-mono font-bold text-yellow-500 bg-slate-950 px-3 py-1 rounded-full border border-slate-800 shadow-md tracking-widest">
+        <span className="text-[7px] font-mono font-bold text-yellow-500/60 tracking-widest">
           {bank.length} UNITS
         </span>
       </div>
       
-      <div className="flex flex-wrap gap-2 min-h-[80px] p-3 bg-slate-950/80 rounded-xl border-2 border-slate-800/50 shadow-inner relative">
+      <div className="flex flex-wrap gap-1 min-h-[48px] p-1.5 bg-slate-950/40 rounded-lg border border-slate-800/30 shadow-inner relative">
         <div className="absolute inset-0 bg-grid-slate-800/[0.05] pointer-events-none" />
         <AnimatePresence>
           {bank.map((tile, idx) => (
             <motion.div
               key={tile.uniqueId || `${tile.id}-${idx}`}
               layout
-              initial={{ scale: 0, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0, opacity: 0, y: -10 }}
-              transition={{ 
-                type: 'spring', 
-                stiffness: 400, 
-                damping: 25,
-                layout: { duration: 0.2 }
-              }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
             >
               <Tile 
                 tile={tile} 
                 onClick={() => onTileClick?.(tile)}
-                className="w-10 h-10"
+                className="w-8 h-8"
                 showPoints={false}
               />
             </motion.div>
           ))}
         </AnimatePresence>
         {bank.length === 0 && (
-          <div className="flex items-center justify-center w-full h-full text-slate-800 text-[9px] font-mono font-bold uppercase tracking-widest italic opacity-50">
-            No tactical units harvested...
+          <div className="flex items-center justify-center w-full h-full text-slate-800 text-[7px] font-mono font-bold uppercase tracking-widest italic opacity-30">
+            Empty
           </div>
         )}
       </div>
