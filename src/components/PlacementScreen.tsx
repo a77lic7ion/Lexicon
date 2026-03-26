@@ -28,6 +28,32 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
   const [orientation, setOrientation] = useState<'h' | 'v'>('h');
   const [hoveredCell, setHoveredCell] = useState<{ r: number; c: number } | null>(null);
 
+  // Count placed tiles to handle limits
+  const placedTiles = player.grid.flat().filter((cell: any) => cell.tileId !== null);
+  const placedTileIds = new Set(placedTiles.map((cell: any) => cell.tileId));
+  const allPossibleTiles = [...LETTER_POOL, ...SPECIAL_TILES];
+  const placedTileObjects = Array.from(placedTileIds).map(id => allPossibleTiles.find(t => t.id === id)).filter(Boolean) as LetterTile[];
+
+  const rareCount = placedTileObjects.filter(t => t.tier === 'rare').length;
+  const wildcardCount = placedTileObjects.filter(t => t.tier === 'wildcard').length;
+
+  const isTileDisabled = (tile: LetterTile) => {
+    if (player.tilesPlaced >= 15) return true;
+    if (tile.tier === 'rare' && rareCount >= 2) return true;
+    if (tile.tier === 'wildcard' && wildcardCount >= 1) return true;
+    if (tile.tier === 'special' && placedTileIds.has(tile.id)) return true;
+
+    // Instance check for letters
+    const instancesInPool = (tile.tier === 'special' ? SPECIAL_TILES : LETTER_POOL).filter(t => 
+      (tile.tier === 'special' ? t.id === tile.id : (t.letter === tile.letter && t.tier === tile.tier))
+    );
+    const placedInstances = placedTileObjects.filter(t => 
+      (tile.tier === 'special' ? t.id === tile.id : (t.letter === tile.letter && t.tier === tile.tier))
+    );
+    
+    return placedInstances.length >= instancesInPool.length;
+  };
+
   // Filter pool to show what's available
   // We'll show unique letters per tier for selection
   const commonTiles = Array.from(new Set(LETTER_POOL.filter(t => t.tier === 'common').map(t => t.letter)))
@@ -40,10 +66,21 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
 
   const handleCellClick = (r: number, c: number) => {
     if (selectedTile) {
-      onPlace(r, c, selectedTile, orientation);
-      // We don't auto-deselect because they might want to place another of the same type?
-      // Actually, tiles are unique in the pool. Let's deselect for now.
-      setSelectedTile(null);
+      // Find an AVAILABLE instance of this letter/tier in the pool
+      const currentPlacedIds = new Set(player.grid.flat().filter((cell: any) => cell.tileId !== null).map((cell: any) => cell.tileId));
+      const availableTile = LETTER_POOL.find(t => 
+        t.letter === selectedTile.letter && 
+        t.tier === selectedTile.tier && 
+        !currentPlacedIds.has(t.id)
+      ) || SPECIAL_TILES.find(t => 
+        t.id === selectedTile.id && 
+        !currentPlacedIds.has(t.id)
+      );
+
+      if (availableTile) {
+        onPlace(r, c, availableTile, orientation);
+        setSelectedTile(null);
+      }
     }
   };
 
@@ -239,7 +276,7 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                 </div>
                 <div className="pl-5 flex flex-col gap-1">
                   <p className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                    Placement Rule: Min 3 vowels. Max: not stated (implied by 15 total).
+                    Placement Rule: Minimum of 3.
                   </p>
                   <p className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest leading-relaxed italic opacity-70">
                     Standard harvest. The backbone of your vocabulary.
@@ -247,14 +284,20 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                 </div>
               </div>
               <div className="flex flex-wrap gap-3 p-4 bg-slate-950/80 rounded-xl border-2 border-slate-800/40 shadow-inner">
-                {commonTiles.map(t => (
-                  <Tile 
-                    key={t.id} 
-                    tile={t} 
-                    onClick={() => setSelectedTile(t)}
-                    className={selectedTile?.id === t.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
-                  />
-                ))}
+                {commonTiles.map(t => {
+                  const disabled = isTileDisabled(t);
+                  return (
+                    <Tile 
+                      key={t.id} 
+                      tile={t} 
+                      onClick={() => !disabled && setSelectedTile(t)}
+                      className={`
+                        ${selectedTile?.id === t.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
+                        ${disabled ? 'opacity-20 grayscale pointer-events-none' : ''}
+                      `}
+                    />
+                  );
+                })}
               </div>
             </section>
 
@@ -266,7 +309,7 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                 </div>
                 <div className="pl-5 flex flex-col gap-1">
                   <p className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                    Tactical Note: Min: 0 · Max: not stated. Grants Bonus Draw when fully destroyed.
+                    Tactical Note: No limit.
                   </p>
                   <p className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest leading-relaxed italic opacity-70">
                     1x2 Cells. Hitting both cells triggers a Bonus Draw (free extra shot).
@@ -274,14 +317,20 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                 </div>
               </div>
               <div className="flex flex-wrap gap-4 p-4 bg-slate-950/80 rounded-xl border-2 border-slate-800/40 shadow-inner">
-                {uncommonTiles.map(t => (
-                  <Tile 
-                    key={t.id} 
-                    tile={t} 
-                    onClick={() => setSelectedTile(t)}
-                    className={selectedTile?.id === t.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
-                  />
-                ))}
+                {uncommonTiles.map(t => {
+                  const disabled = isTileDisabled(t);
+                  return (
+                    <Tile 
+                      key={t.id} 
+                      tile={t} 
+                      onClick={() => !disabled && setSelectedTile(t)}
+                      className={`
+                        ${selectedTile?.id === t.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
+                        ${disabled ? 'opacity-20 grayscale pointer-events-none' : ''}
+                      `}
+                    />
+                  );
+                })}
               </div>
             </section>
 
@@ -293,7 +342,7 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                 </div>
                 <div className="pl-5 flex flex-col gap-1">
                   <p className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                    Max 2 Rare / Max 1 Wildcard. Min: 0 for both (not stated).
+                    Rare Max 2 & Wildcard Max 1.
                   </p>
                   <p className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest leading-relaxed italic opacity-70">
                     Rare counts double in word scoring. Wildcard represents any letter.
@@ -301,19 +350,33 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                 </div>
               </div>
               <div className="flex flex-wrap gap-4 p-4 bg-slate-950/80 rounded-xl border-2 border-slate-800/40 shadow-inner">
-                {rareTiles.map(t => (
-                  <Tile 
-                    key={t.id} 
-                    tile={t} 
-                    onClick={() => setSelectedTile(t)}
-                    className={selectedTile?.id === t.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
-                  />
-                ))}
-                <Tile 
-                  tile={wildcard} 
-                  onClick={() => setSelectedTile(wildcard)}
-                  className={selectedTile?.id === wildcard.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
-                />
+                {rareTiles.map(t => {
+                  const disabled = isTileDisabled(t);
+                  return (
+                    <Tile 
+                      key={t.id} 
+                      tile={t} 
+                      onClick={() => !disabled && setSelectedTile(t)}
+                      className={`
+                        ${selectedTile?.id === t.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
+                        ${disabled ? 'opacity-20 grayscale pointer-events-none' : ''}
+                      `}
+                    />
+                  );
+                })}
+                {(() => {
+                  const disabled = isTileDisabled(wildcard);
+                  return (
+                    <Tile 
+                      tile={wildcard} 
+                      onClick={() => !disabled && setSelectedTile(wildcard)}
+                      className={`
+                        ${selectedTile?.id === wildcard.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
+                        ${disabled ? 'opacity-20 grayscale pointer-events-none' : ''}
+                      `}
+                    />
+                  );
+                })()}
               </div>
             </section>
 
@@ -325,7 +388,7 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                 </div>
                 <div className="pl-5 flex flex-col gap-1">
                   <p className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                    Constraint: Max 1 each. Min: 0 (not stated).
+                    Max 1 each only.
                   </p>
                   <p className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest leading-relaxed italic opacity-70">
                     Vault: 2 hits. Poison: Decoy. Mirror: Copy. Charged: Bonus shot.
@@ -333,14 +396,20 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                 </div>
               </div>
               <div className="flex flex-wrap gap-4 p-4 bg-slate-950/80 rounded-xl border-2 border-slate-800/40 shadow-inner">
-                {SPECIAL_TILES.map(t => (
-                  <Tile 
-                    key={t.id} 
-                    tile={t} 
-                    onClick={() => setSelectedTile(t)}
-                    className={selectedTile?.id === t.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
-                  />
-                ))}
+                {SPECIAL_TILES.map(t => {
+                  const disabled = isTileDisabled(t);
+                  return (
+                    <Tile 
+                      key={t.id} 
+                      tile={t} 
+                      onClick={() => !disabled && setSelectedTile(t)}
+                      className={`
+                        ${selectedTile?.id === t.id ? 'ring-4 ring-yellow-500 scale-110 z-10 shadow-[0_0_20px_rgba(234,179,8,0.4)]' : 'scale-100 opacity-70 hover:opacity-100 hover:scale-105 transition-all'}
+                        ${disabled ? 'opacity-20 grayscale pointer-events-none' : ''}
+                      `}
+                    />
+                  );
+                })}
               </div>
             </section>
           </div>

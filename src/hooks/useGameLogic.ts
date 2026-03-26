@@ -160,30 +160,62 @@ export const useGameLogic = () => {
     let placedCount = 0;
     let history: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[] = [];
     
-    const pool = [...LETTER_POOL];
-    const specials = [...SPECIAL_TILES];
+    // Helper to shuffle array
+    const shuffle = <T>(array: T[]): T[] => {
+      const newArr = [...array];
+      for (let i = newArr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+      }
+      return newArr;
+    };
+
+    const pool = shuffle([...LETTER_POOL]);
+    const specials = shuffle([...SPECIAL_TILES]);
     
     const toPlace: LetterTile[] = [];
-    const vowels = pool.filter(t => ['A', 'E', 'I', 'O', 'U'].includes(t.letter)).slice(0, 3);
+    
+    // 1. Pick 3 Common tiles (vowels preferred for strategy)
+    const commonPool = pool.filter(t => t.tier === 'common');
+    const vowels = shuffle(commonPool.filter(t => ['A', 'E', 'I', 'O', 'U'].includes(t.letter))).slice(0, 3);
     toPlace.push(...vowels);
-    toPlace.push(...pool.filter(t => t.tier === 'rare').slice(0, 2));
-    toPlace.push(pool.find(t => t.tier === 'wildcard')!);
-    toPlace.push(...pool.filter(t => t.tier === 'uncommon').slice(0, 4));
+    
+    // 2. Pick Rare (Max 2)
+    const rarePool = pool.filter(t => t.tier === 'rare');
+    toPlace.push(...rarePool.slice(0, 2));
+    
+    // 3. Pick Wildcard (Max 1)
+    const wildcard = pool.find(t => t.tier === 'wildcard');
+    if (wildcard) toPlace.push(wildcard);
+    
+    // 4. Pick Uncommon (No limit, but let's pick a healthy amount like 3-5)
+    const uncommonPool = pool.filter(t => t.tier === 'uncommon');
+    toPlace.push(...uncommonPool.slice(0, 4));
+    
+    // 5. Pick Specials (Max 1 each)
     toPlace.push(...specials);
-    const remaining = 15 - toPlace.length;
-    toPlace.push(...pool.filter(t => t.tier === 'common' && !toPlace.includes(t)).slice(0, remaining));
+    
+    // 6. Fill remaining to 15 with Common/Uncommon
+    const remainingPool = shuffle(pool.filter(t => !toPlace.find(p => p.id === t.id)));
+    const needed = 15 - toPlace.length;
+    if (needed > 0) {
+      toPlace.push(...remainingPool.slice(0, needed));
+    }
 
     let globalAttempts = 0;
-    while (placedCount < 15 && globalAttempts < 5) {
+    while (placedCount < 15 && globalAttempts < 10) {
       globalAttempts++;
       currentGrid = createEmptyGrid();
       placedCount = 0;
       history = [];
 
-      for (const tile of toPlace) {
+      // Shuffle toPlace order for even more variety in layout
+      const shuffledToPlace = shuffle(toPlace);
+
+      for (const tile of shuffledToPlace) {
         let placed = false;
         let attempts = 0;
-        while (!placed && attempts < 50) {
+        while (!placed && attempts < 100) {
           attempts++;
           const r = Math.floor(Math.random() * GRID_SIZE);
           const c = Math.floor(Math.random() * GRID_SIZE);
@@ -202,8 +234,8 @@ export const useGameLogic = () => {
           }
 
           if (valid) {
-            // Buffer check - only enforce strictly on first few global attempts
-            const bufferSize = globalAttempts < 3 ? 1 : 0;
+            // Buffer check - relax if struggling
+            const bufferSize = globalAttempts < 5 ? 1 : 0;
             if (bufferSize > 0) {
               for (const cell of cells) {
                 for (let dr = -bufferSize; dr <= bufferSize; dr++) {
@@ -331,6 +363,37 @@ export const useGameLogic = () => {
     const p = gameState.players[player];
     if (p.tilesPlaced < 15) {
       setError('Place all 15 tiles first');
+      return;
+    }
+
+    // Enforce deployment rules
+    const placedTiles = p.grid.flat().filter(c => c.tileId);
+    const uniqueTileIds = Array.from(new Set(placedTiles.map(c => c.tileId)));
+    const allTiles = [...LETTER_POOL, ...SPECIAL_TILES];
+    const placedTileObjects = uniqueTileIds.map(id => allTiles.find(t => t.id === id)).filter(Boolean) as LetterTile[];
+
+    const commonCount = placedTileObjects.filter(t => t.tier === 'common').length;
+    const rareCount = placedTileObjects.filter(t => t.tier === 'rare').length;
+    const wildcardCount = placedTileObjects.filter(t => t.tier === 'wildcard').length;
+    const specialCount = placedTileObjects.filter(t => t.tier === 'special').length;
+
+    if (commonCount < 3) {
+      setError('Deployment Error: Minimum 3 Common tiles required');
+      return;
+    }
+    if (rareCount > 2) {
+      setError('Deployment Error: Maximum 2 Rare tiles allowed');
+      return;
+    }
+    if (wildcardCount > 1) {
+      setError('Deployment Error: Maximum 1 Wildcard allowed');
+      return;
+    }
+
+    // Special assets check (max 1 each)
+    const specialIds = placedTileObjects.filter(t => t.tier === 'special').map(t => t.id);
+    if (new Set(specialIds).size !== specialIds.length) {
+      setError('Deployment Error: Maximum 1 of each Special Asset allowed');
       return;
     }
 
@@ -783,30 +846,61 @@ export const useGameLogic = () => {
     let placedCount = 0;
     let history: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[] = [];
     
-    const pool = [...LETTER_POOL];
-    const specials = [...SPECIAL_TILES];
+    // Helper to shuffle array
+    const shuffle = <T>(array: T[]): T[] => {
+      const newArr = [...array];
+      for (let i = newArr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+      }
+      return newArr;
+    };
+
+    const pool = shuffle([...LETTER_POOL]);
+    const specials = shuffle([...SPECIAL_TILES]);
     
     const toPlace: LetterTile[] = [];
-    const vowels = pool.filter(t => ['A', 'E', 'I', 'O', 'U'].includes(t.letter)).slice(0, 3);
+    
+    // 1. Pick 3 Common tiles
+    const commonPool = pool.filter(t => t.tier === 'common');
+    const vowels = shuffle(commonPool.filter(t => ['A', 'E', 'I', 'O', 'U'].includes(t.letter))).slice(0, 3);
     toPlace.push(...vowels);
-    toPlace.push(...pool.filter(t => t.tier === 'rare').slice(0, 2));
-    toPlace.push(pool.find(t => t.tier === 'wildcard')!);
-    toPlace.push(...pool.filter(t => t.tier === 'uncommon').slice(0, 4));
+    
+    // 2. Pick Rare (Max 2)
+    const rarePool = pool.filter(t => t.tier === 'rare');
+    toPlace.push(...rarePool.slice(0, 2));
+    
+    // 3. Pick Wildcard (Max 1)
+    const wildcard = pool.find(t => t.tier === 'wildcard');
+    if (wildcard) toPlace.push(wildcard);
+    
+    // 4. Pick Uncommon
+    const uncommonPool = pool.filter(t => t.tier === 'uncommon');
+    toPlace.push(...uncommonPool.slice(0, 4));
+    
+    // 5. Pick Specials
     toPlace.push(...specials);
-    const remaining = 15 - toPlace.length;
-    toPlace.push(...pool.filter(t => t.tier === 'common' && !toPlace.includes(t)).slice(0, remaining));
+    
+    // 6. Fill remaining to 15
+    const remainingPool = shuffle(pool.filter(t => !toPlace.find(p => p.id === t.id)));
+    const needed = 15 - toPlace.length;
+    if (needed > 0) {
+      toPlace.push(...remainingPool.slice(0, needed));
+    }
 
     let globalAttempts = 0;
-    while (placedCount < 15 && globalAttempts < 5) {
+    while (placedCount < 15 && globalAttempts < 10) {
       globalAttempts++;
       currentGrid = createEmptyGrid();
       placedCount = 0;
       history = [];
 
-      for (const tile of toPlace) {
+      const shuffledToPlace = shuffle(toPlace);
+
+      for (const tile of shuffledToPlace) {
         let placed = false;
         let attempts = 0;
-        while (!placed && attempts < 50) {
+        while (!placed && attempts < 100) {
           attempts++;
           const r = Math.floor(Math.random() * GRID_SIZE);
           const c = Math.floor(Math.random() * GRID_SIZE);
@@ -825,7 +919,7 @@ export const useGameLogic = () => {
           }
 
           if (valid) {
-            const bufferSize = globalAttempts < 3 ? 1 : 0;
+            const bufferSize = globalAttempts < 5 ? 1 : 0;
             if (bufferSize > 0) {
               for (const cell of cells) {
                 for (let dr = -bufferSize; dr <= bufferSize; dr++) {
