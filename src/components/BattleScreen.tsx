@@ -413,7 +413,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
         onQuit={onQuit}
         onToggleSound={onToggleSound}
         isSoundEnabled={isSoundEnabled}
-        onSetDifficulty={setDifficulty}
+        onSetDifficulty={onSetDifficulty}
       />
     </div>
   );
