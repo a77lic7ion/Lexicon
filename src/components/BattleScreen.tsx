@@ -232,8 +232,12 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
       <div className="flex flex-col gap-4 w-full max-w-[1080px] items-center relative z-10">
         
         {/* 1. Opponent Rack (Thin) */}
-        <div className="w-full max-w-[600px]">
-          <LetterBank bank={opponent.bank} title={`Opponent Bank (${opponent.name})`} />
+        <div className="w-full max-w-[600px] flex flex-col gap-2">
+          <div className="flex justify-between items-center px-2">
+            <span className="text-[10px] font-mono font-black text-slate-500 uppercase tracking-widest">Opponent: {opponent.name}</span>
+            <span className="text-[10px] font-mono font-black text-blue-500 uppercase tracking-widest">Score: {opponent.score}</span>
+          </div>
+          <LetterBank bank={opponent.bank} title="" />
         </div>
 
         {/* 2. Central Board (Largest) */}
@@ -250,8 +254,12 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
         </div>
 
         {/* 3. Player Rack (Thin) */}
-        <div className="w-full max-w-[600px]">
-          <LetterBank bank={viewingPlayer.bank} title="Your Bank" />
+        <div className="w-full max-w-[600px] flex flex-col gap-2">
+          <div className="flex justify-between items-center px-2">
+            <span className="text-[10px] font-mono font-black text-slate-500 uppercase tracking-widest">You: {viewingPlayer.name}</span>
+            <span className="text-[10px] font-mono font-black text-emerald-500 uppercase tracking-widest">Score: {viewingPlayer.score}</span>
+          </div>
+          <LetterBank bank={viewingPlayer.bank} title="" />
         </div>
 
         {/* 4. Action Area */}

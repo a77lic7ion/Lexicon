@@ -32,6 +32,7 @@ const initialPlayerState = (id: 1 | 2): PlayerState => ({
   bank: [],
   tilesPlaced: 0,
   isReady: false,
+  score: 0,
   isAI: false,
   difficulty: 'medium',
   placementHistory: [],
@@ -372,13 +373,14 @@ export const useGameLogic = () => {
     const allTiles = [...LETTER_POOL, ...SPECIAL_TILES];
     const placedTileObjects = uniqueTileIds.map(id => allTiles.find(t => t.id === id)).filter(Boolean) as LetterTile[];
 
-    const commonCount = placedTileObjects.filter(t => t.tier === 'common').length;
+    const vowels = ['A', 'E', 'I', 'O', 'U'];
+    const vowelCount = placedTileObjects.filter(t => t.tier === 'common' && vowels.includes(t.letter)).length;
     const rareCount = placedTileObjects.filter(t => t.tier === 'rare').length;
     const wildcardCount = placedTileObjects.filter(t => t.tier === 'wildcard').length;
     const specialCount = placedTileObjects.filter(t => t.tier === 'special').length;
 
-    if (commonCount < 3) {
-      setError('Deployment Error: Minimum 3 Common tiles required');
+    if (vowelCount < 3) {
+      setError('Deployment Error: Minimum 3 Vowels (A, E, I, O, U) required');
       return;
     }
     if (rareCount > 2) {
@@ -425,18 +427,21 @@ export const useGameLogic = () => {
     });
   };
 
-  const checkWin = (opponent: PlayerState, mode: WinMode, lastWordLen: number = 0): boolean => {
+  const checkWin = (opponent: PlayerState, mode: WinMode): boolean => {
     const allTiles = new Set(opponent.grid.flat().filter(c => c.tileId).map(c => c.tileId));
     const destroyedTiles = Array.from(allTiles).filter(tid => 
       opponent.grid.flat().filter(c => c.tileId === tid).every(c => c.isHit)
     );
 
+    const activeId = opponent.id === 1 ? 2 : 1;
+    const activePlayer = gameState.players[activeId];
+
     if (mode === 'classic') {
       return destroyedTiles.length >= 15;
     } else if (mode === 'lexicon') {
-      return lastWordLen >= 8;
+      return activePlayer.score >= 100;
     } else if (mode === 'hybrid') {
-      return destroyedTiles.length >= 10 || lastWordLen >= 7;
+      return destroyedTiles.length >= 15 || activePlayer.score >= 100;
     }
     return false;
   };
@@ -461,14 +466,21 @@ export const useGameLogic = () => {
     if (cell.tileId) {
       hit = true;
       playSound(SOUNDS.HIT);
-      cell.isHit = true;
-      cell.hitsReceived = (cell.hitsReceived || 0) + 1;
-
-      // Special logic
+      
+      const isMirror = cell.isSpecial === 'mirror';
       const isVault = cell.isSpecial === 'vault';
       const isPoison = cell.isSpecial === 'poison';
-      const isMirror = cell.isSpecial === 'mirror';
       const isCharged = cell.isSpecial === 'charged';
+
+      // Mirror logic: remains unbroken on first hit
+      if (isMirror && !cell.isMirrored) {
+        cell.isMirrored = true;
+        cell.isHit = false; // Rule: "original remains on the grid unbroken"
+      } else {
+        cell.isHit = true;
+      }
+      
+      cell.hitsReceived = (cell.hitsReceived || 0) + 1;
 
       if (isPoison) {
         const activePlayer = gameState.players[activeId];
@@ -485,13 +497,12 @@ export const useGameLogic = () => {
         }
       }
 
-      const shouldHarvest = !isVault || (cell.hitsReceived === 2);
+      // Harvesting logic
+      // Vault requires 2 hits. Mirror yields letter on first hit (even if unbroken).
+      const shouldHarvest = isMirror || !isVault || (cell.hitsReceived === 2);
       
       if (shouldHarvest && !isPoison) {
         harvestedLetter = LETTER_POOL.find(l => l.letter === cell.letter && l.tier === cell.tier) || null;
-        if (isMirror) {
-          cell.isHit = true; 
-        }
       }
 
       if (cell.tier === 'uncommon') {
@@ -584,6 +595,7 @@ export const useGameLogic = () => {
     const bankLetters = activePlayer.bank.map(l => l.letter);
     const wordLetters = upperWord.split('');
     const newBank = [...activePlayer.bank];
+    let wordScore = 0;
 
     for (const char of wordLetters) {
       const idx = newBank.findIndex(l => l.letter === char);
@@ -593,13 +605,15 @@ export const useGameLogic = () => {
           setError('Missing letters in bank');
           return;
         }
+        wordScore += newBank[wildcardIdx].points;
         newBank.splice(wildcardIdx, 1);
       } else {
+        wordScore += newBank[idx].points;
         newBank.splice(idx, 1);
       }
     }
 
-    setMessage(`Word Bomb: ${upperWord} cast! Consumed ${upperWord.length} letters.`);
+    setMessage(`Word Bomb: ${upperWord} cast! Consumed ${upperWord.length} letters. Score: +${wordScore}`);
 
     const length = upperWord.length;
     const opponent = gameState.players[opponentId];
@@ -677,8 +691,8 @@ export const useGameLogic = () => {
 
     setGameState(prev => {
       const updatedOpponent = { ...prev.players[opponentId], grid: newGrid };
-      const updatedActive = { ...prev.players[activeId], bank: newBank };
-      const isGameOver = checkWin(updatedOpponent, prev.winMode, length);
+      const updatedActive = { ...prev.players[activeId], bank: newBank, score: prev.players[activeId].score + wordScore };
+      const isGameOver = checkWin(updatedOpponent, prev.winMode);
       const nextPhase = isGameOver ? 'gameover' : 'battle';
 
       if (isGameOver) playSound(SOUNDS.WIN);
@@ -696,7 +710,7 @@ export const useGameLogic = () => {
         playerName: prev.players[activeId].name,
         type: 'bomb',
         action: `Cast ${upperWord} at ${targetStr}`,
-        result: `Consumed ${length} letters`,
+        result: `Consumed ${length} letters. Score: +${wordScore}`,
         timestamp: Date.now(),
       };
 

@@ -57,18 +57,24 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, onRes
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6 w-full">
-          <div className="bg-slate-900/40 p-8 rounded-2xl border-4 border-slate-800/60 flex flex-col gap-2 shadow-xl backdrop-blur-md relative overflow-hidden group hover:border-slate-700 transition-all">
+        <div className="grid grid-cols-3 gap-4 w-full">
+          <div className="bg-slate-900/40 p-6 rounded-2xl border-4 border-slate-800/60 flex flex-col gap-2 shadow-xl backdrop-blur-md relative overflow-hidden group hover:border-slate-700 transition-all">
             <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-30" />
             <div className="absolute inset-0 grid-blueprint opacity-5 pointer-events-none" />
-            <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em] group-hover:text-slate-400 transition-colors">Turns Taken</span>
-            <span className="text-4xl font-serif font-black text-white drop-shadow-md">{gameState.turnCount}</span>
+            <span className="text-[9px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em] group-hover:text-slate-400 transition-colors">Turns</span>
+            <span className="text-3xl font-serif font-black text-white drop-shadow-md">{gameState.turnCount}</span>
           </div>
-          <div className="bg-slate-900/40 p-8 rounded-2xl border-4 border-slate-800/60 flex flex-col gap-2 shadow-xl backdrop-blur-md relative overflow-hidden group hover:border-slate-700 transition-all">
+          <div className="bg-slate-900/40 p-6 rounded-2xl border-4 border-slate-800/60 flex flex-col gap-2 shadow-xl backdrop-blur-md relative overflow-hidden group hover:border-slate-700 transition-all">
             <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-30" />
             <div className="absolute inset-0 grid-blueprint opacity-5 pointer-events-none" />
-            <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em] group-hover:text-slate-400 transition-colors">Words Cast</span>
-            <span className="text-4xl font-serif font-black text-white drop-shadow-md">{gameState.playedWords.length}</span>
+            <span className="text-[9px] font-mono font-bold text-slate-600 uppercase tracking-[0.2em] group-hover:text-slate-400 transition-colors">Words</span>
+            <span className="text-3xl font-serif font-black text-white drop-shadow-md">{gameState.playedWords.length}</span>
+          </div>
+          <div className="bg-slate-900/40 p-6 rounded-2xl border-4 border-slate-800/60 flex flex-col gap-2 shadow-xl backdrop-blur-md relative overflow-hidden group hover:border-slate-700 transition-all">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-30" />
+            <div className="absolute inset-0 grid-blueprint opacity-5 pointer-events-none" />
+            <span className="text-[9px] font-mono font-bold text-emerald-500 uppercase tracking-[0.2em] group-hover:text-emerald-400 transition-colors">Final Score</span>
+            <span className="text-3xl font-serif font-black text-emerald-400 drop-shadow-md">{winner.score}</span>
           </div>
         </div>
 

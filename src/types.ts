@@ -17,6 +17,7 @@ export interface CellState {
   hitsRequired?: number;
   hitsReceived?: number;
   isRevealed?: boolean; // For Spark/Surge
+  isMirrored?: boolean; // For Mirror asset
 }
 
 export interface PlayerState {
@@ -26,6 +27,7 @@ export interface PlayerState {
   bank: LetterTile[];
   tilesPlaced: number;
   isReady: boolean;
+  score: number;
   isAI?: boolean;
   difficulty?: Difficulty;
   placementHistory?: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[];

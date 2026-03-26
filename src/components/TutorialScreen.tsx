@@ -8,95 +8,177 @@ interface TutorialScreenProps {
 
 const STAGES = [
   {
-    title: "1. The Grid & Setup",
+    title: "1. Strategic Deployment",
     icon: <Target className="w-8 h-8 text-blue-500" />,
     content: (
-      <div className="flex flex-col gap-4">
-        <p>Lexicon is played on a 10x10 grid. Before the battle begins, you must secretly place 15 Letter Tiles.</p>
-        <ul className="list-disc pl-5 space-y-2 text-slate-400 text-sm">
-          <li>Tiles can be placed <span className="text-white font-bold">horizontally or vertically</span>.</li>
-          <li>A <span className="text-white font-bold">1-cell buffer</span> is required between all tiles (no touching!).</li>
-          <li>You must include at least <span className="text-white font-bold">3 vowels</span> (Common tier).</li>
-          <li>Max <span className="text-white font-bold">2 Rare tiles</span> and <span className="text-white font-bold">1 Wildcard</span>.</li>
-        </ul>
+      <div className="flex flex-col gap-6">
+        <p className="text-lg text-white font-serif italic">"A battle won in the mind is a battle won on the field."</p>
+        <div className="grid grid-cols-1 gap-4">
+          <div className="flex items-start gap-4 bg-slate-900/60 p-4 rounded-2xl border-2 border-slate-800">
+            <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400 font-bold">01</div>
+            <div>
+              <h4 className="text-white font-bold text-sm mb-1">GRID PROTOCOL</h4>
+              <p className="text-xs text-slate-400">Deploy 15 tiles on your 10x10 grid. Orientation can be horizontal or vertical.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-4 bg-slate-900/60 p-4 rounded-2xl border-2 border-slate-800">
+            <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400 font-bold">02</div>
+            <div>
+              <h4 className="text-white font-bold text-sm mb-1">BUFFER ZONE</h4>
+              <p className="text-xs text-slate-400">Maintain a 1-cell empty buffer around every tile. No diagonal or adjacent touching allowed.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-4 bg-slate-900/60 p-4 rounded-2xl border-2 border-slate-800">
+            <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400 font-bold">03</div>
+            <div>
+              <h4 className="text-white font-bold text-sm mb-1">COMPOSITION</h4>
+              <p className="text-xs text-slate-400">Min 3 Vowels (Common). Max 2 Rare. Max 1 Wildcard. Max 1 of each Special Asset.</p>
+            </div>
+          </div>
+        </div>
       </div>
     )
   },
   {
-    title: "2. Harvesting Letters",
-    icon: <Sword className="w-8 h-8 text-red-500" />,
-    content: (
-      <div className="flex flex-col gap-4">
-        <p>On your turn, you can <span className="text-white font-bold">FIRE</span> at a coordinate on the enemy grid.</p>
-        <ul className="list-disc pl-5 space-y-2 text-slate-400 text-sm">
-          <li><span className="text-emerald-500 font-bold">HIT:</span> You harvest that letter into your <span className="text-white font-bold">Letter Bank</span>.</li>
-          <li><span className="text-slate-500 font-bold">MISS:</span> Mark the cell as empty. Your turn ends.</li>
-          <li><span className="text-blue-400 font-bold">UNCOMMON TILES:</span> These occupy 2 cells. Hit both for a <span className="text-white font-bold">Bonus Draw</span> (extra shot!).</li>
-        </ul>
-      </div>
-    )
-  },
-  {
-    title: "3. Word Bombs",
+    title: "2. The Arsenal",
     icon: <Zap className="w-8 h-8 text-yellow-500" />,
     content: (
-      <div className="flex flex-col gap-4">
-        <p>Instead of firing, you can spend letters from your bank to cast a <span className="text-white font-bold">Word Bomb</span>. The longer the word, the more powerful the effect!</p>
-        <div className="grid grid-cols-1 gap-2 text-xs font-mono">
-          <div className="flex justify-between p-2 bg-slate-800 rounded border-l-4 border-yellow-500">
-            <span>3: SPARK</span> <span className="text-slate-500">Scan row/col for tiles</span>
+      <div className="flex flex-col gap-6">
+        <p className="text-slate-400">Your tiles are your lifeblood. Each tier serves a specific tactical purpose.</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="p-4 bg-slate-900/60 rounded-2xl border-2 border-slate-800">
+            <span className="text-[10px] font-black text-slate-500 block mb-2 tracking-widest uppercase">Common</span>
+            <div className="text-2xl font-serif font-black text-white mb-1">A, E, I, O, U...</div>
+            <p className="text-[10px] text-slate-500 uppercase">1x1 Size // 1-3 Points</p>
           </div>
-          <div className="flex justify-between p-2 bg-slate-800 rounded border-l-4 border-orange-500">
-            <span>4: BLAST</span> <span className="text-slate-500">Precision hit on 1 cell</span>
+          <div className="p-4 bg-slate-900/60 rounded-2xl border-2 border-slate-800">
+            <span className="text-[10px] font-black text-blue-500 block mb-2 tracking-widest uppercase">Uncommon</span>
+            <div className="text-2xl font-serif font-black text-white mb-1">J, K, Q, X...</div>
+            <p className="text-[10px] text-slate-500 uppercase">1x2 Size // 4-8 Points</p>
           </div>
-          <div className="flex justify-between p-2 bg-slate-800 rounded border-l-4 border-teal-500">
-            <span>5: SURGE</span> <span className="text-slate-500">Reveal all tiles in row/col</span>
+          <div className="p-4 bg-slate-900/60 rounded-2xl border-2 border-slate-800">
+            <span className="text-[10px] font-black text-purple-500 block mb-2 tracking-widest uppercase">Rare</span>
+            <div className="text-2xl font-serif font-black text-white mb-1">Z, W, V...</div>
+            <p className="text-[10px] text-slate-500 uppercase">1x1 Size // 10 Points</p>
           </div>
-          <div className="flex justify-between p-2 bg-slate-800 rounded border-l-4 border-purple-500">
-            <span>6: STORM</span> <span className="text-slate-500">Hit a 2x2 area</span>
-          </div>
-          <div className="flex justify-between p-2 bg-slate-800 rounded border-l-4 border-magenta-500">
-            <span>7: TEMPEST</span> <span className="text-slate-500">Steal random enemy letter</span>
-          </div>
-          <div className="flex justify-between p-2 bg-slate-800 rounded border-l-4 border-blue-500">
-            <span>8+: OBLITERATE</span> <span className="text-slate-500">Destroy full row/col</span>
+          <div className="p-4 bg-slate-900/60 rounded-2xl border-2 border-slate-800">
+            <span className="text-[10px] font-black text-yellow-500 block mb-2 tracking-widest uppercase">Wildcard</span>
+            <div className="text-2xl font-serif font-black text-white mb-1">?</div>
+            <p className="text-[10px] text-slate-500 uppercase">1x1 Size // 0 Points</p>
           </div>
         </div>
       </div>
     )
   },
   {
-    title: "4. Special Tiles",
-    icon: <Shield className="w-8 h-8 text-emerald-500" />,
+    title: "3. The Harvest",
+    icon: <Sword className="w-8 h-8 text-red-500" />,
     content: (
-      <div className="flex flex-col gap-4">
-        <p>Protect your grid with special defensive tiles:</p>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 bg-slate-800 rounded-xl flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-blue-400">
-              <Shield className="w-4 h-4" /> <span className="text-xs font-bold">VAULT</span>
-            </div>
-            <p className="text-[10px] text-slate-400">Requires 2 hits to harvest. Armored.</p>
+      <div className="flex flex-col gap-6">
+        <p className="text-slate-400">Locate and extract enemy letters to build your bank.</p>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-6 p-4 bg-red-500/5 rounded-2xl border-2 border-red-500/20">
+            <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center text-red-500 font-black">HIT</div>
+            <p className="text-xs text-slate-300">A successful strike harvests the letter into your bank. You keep firing until you miss.</p>
           </div>
-          <div className="p-3 bg-slate-800 rounded-xl flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-green-400">
-              <Skull className="w-4 h-4" /> <span className="text-xs font-bold">POISON</span>
-            </div>
-            <p className="text-[10px] text-slate-400">Attacker discards a random letter.</p>
+          <div className="flex items-center gap-6 p-4 bg-slate-800/40 rounded-2xl border-2 border-slate-700/40">
+            <div className="w-12 h-12 bg-slate-700/20 rounded-full flex items-center justify-center text-slate-500 font-black">MISS</div>
+            <p className="text-xs text-slate-400">Missing an empty cell ends your turn. Control passes to the opponent.</p>
           </div>
-          <div className="p-3 bg-slate-800 rounded-xl flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-purple-400">
-              <Copy className="w-4 h-4" /> <span className="text-xs font-bold">MIRROR</span>
-            </div>
-            <p className="text-[10px] text-slate-400">Attacker gets a copy; tile stays.</p>
-          </div>
-          <div className="p-3 bg-slate-800 rounded-xl flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-yellow-400">
-              <Zap className="w-4 h-4" /> <span className="text-xs font-bold">CHARGED</span>
-            </div>
-            <p className="text-[10px] text-slate-400">Bonus shot if last in row/col.</p>
+          <div className="flex items-center gap-6 p-4 bg-blue-500/5 rounded-2xl border-2 border-blue-500/20">
+            <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-500 font-black">BONUS</div>
+            <p className="text-xs text-slate-300">Destroying both halves of an <span className="text-blue-400 font-bold">Uncommon</span> tile yields a Bonus Shot.</p>
           </div>
         </div>
+      </div>
+    )
+  },
+  {
+    title: "4. Word Bombs",
+    icon: <Zap className="w-8 h-8 text-yellow-500" />,
+    content: (
+      <div className="flex flex-col gap-6">
+        <p className="text-slate-400">Convert harvested letters into devastating tactical strikes. Longer words unlock higher tiers.</p>
+        <div className="space-y-2">
+          {[
+            { len: 3, name: "SPARK", desc: "Scan row/col for tile presence", color: "bg-yellow-500" },
+            { len: 4, name: "BLAST", desc: "Precision strike on a single cell", color: "bg-orange-500" },
+            { len: 5, name: "SURGE", desc: "Reveal all tiles in a row/col", color: "bg-teal-500" },
+            { len: 6, name: "STORM", desc: "Heavy damage in a 2x2 area", color: "bg-purple-500" },
+            { len: 7, name: "TEMPEST", desc: "Extract a random letter from enemy bank", color: "bg-pink-500" },
+            { len: "8+", name: "OBLITERATE", desc: "Total destruction of a row or column", color: "bg-blue-500" },
+          ].map((bomb, i) => (
+            <div key={i} className="flex items-center gap-4 p-3 bg-slate-900/60 rounded-xl border border-slate-800 group hover:border-slate-700 transition-colors">
+              <div className={`w-10 h-10 ${bomb.color} rounded-lg flex items-center justify-center text-black font-black text-xs shadow-lg`}>{bomb.len}</div>
+              <div className="flex flex-col">
+                <span className="text-white font-bold text-[10px] tracking-widest">{bomb.name}</span>
+                <span className="text-[10px] text-slate-500">{bomb.desc}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  },
+  {
+    title: "5. Defensive Assets",
+    icon: <Shield className="w-8 h-8 text-emerald-500" />,
+    content: (
+      <div className="flex flex-col gap-6">
+        <p className="text-slate-400">Deploy these to disrupt enemy harvesting and protect your lexicon.</p>
+        <div className="grid grid-cols-1 gap-4">
+          <div className="flex items-center gap-4 p-4 bg-slate-900/60 rounded-2xl border-2 border-slate-800">
+            <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center text-blue-400"><Shield className="w-6 h-6" /></div>
+            <div>
+              <h4 className="text-white font-bold text-sm uppercase tracking-widest">Vault</h4>
+              <p className="text-[10px] text-slate-500">Reinforced armor. Requires 2 hits to harvest the letter.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 p-4 bg-slate-900/60 rounded-2xl border-2 border-slate-800">
+            <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center text-green-400"><Skull className="w-6 h-6" /></div>
+            <div>
+              <h4 className="text-white font-bold text-sm uppercase tracking-widest">Poison</h4>
+              <p className="text-[10px] text-slate-500">Toxic payload. Attacker discards a random letter from their bank.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 p-4 bg-slate-900/60 rounded-2xl border-2 border-slate-800">
+            <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center text-purple-400"><Copy className="w-6 h-6" /></div>
+            <div>
+              <h4 className="text-white font-bold text-sm uppercase tracking-widest">Mirror</h4>
+              <p className="text-[10px] text-slate-500">Optical decoy. Yields a letter copy but remains unbroken once.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 p-4 bg-slate-900/60 rounded-2xl border-2 border-slate-800">
+            <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-400"><Zap className="w-6 h-6" /></div>
+            <div>
+              <h4 className="text-white font-bold text-sm uppercase tracking-widest">Charged</h4>
+              <p className="text-[10px] text-slate-500">Kinetic energy. Grants a bonus shot if it's the last tile in its row/col.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    title: "6. Victory Protocol",
+    icon: <Target className="w-8 h-8 text-emerald-500" />,
+    content: (
+      <div className="flex flex-col gap-8 items-center justify-center py-10">
+        <div className="text-center space-y-4">
+          <h4 className="text-white font-serif text-3xl italic">"The last word is the only one that matters."</h4>
+          <p className="text-slate-400 max-w-xs mx-auto">Victory is achieved through total domination or linguistic superiority.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-8 w-full">
+          <div className="flex flex-col items-center gap-4 p-6 bg-emerald-500/5 rounded-[3rem] border-4 border-emerald-500/20">
+            <div className="text-4xl font-black text-emerald-500">15</div>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">Tiles Destroyed</p>
+          </div>
+          <div className="flex flex-col items-center gap-4 p-6 bg-blue-500/5 rounded-[3rem] border-4 border-blue-500/20">
+            <div className="text-4xl font-black text-blue-500">100</div>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center">Lexicon Points</p>
+          </div>
+        </div>
+        <p className="text-[10px] text-slate-600 font-mono uppercase tracking-[0.2em]">Hybrid Mode: First to reach either milestone wins.</p>
       </div>
     )
   }
