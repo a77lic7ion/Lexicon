@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Settings, Volume2, VolumeX, RefreshCw, LogOut, Trophy, Info } from 'lucide-react';
+import { X, Settings, Volume2, VolumeX, RefreshCw, LogOut, Trophy, Info, Brain, Zap, CheckCircle, AlertCircle } from 'lucide-react';
 import { WinMode, Difficulty, GameState } from '../types';
-import { Brain } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -25,9 +24,59 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   isSoundEnabled,
   onSetDifficulty
 }) => {
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [testWord, setTestWord] = useState('');
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [isTesting, setIsTesting] = useState(false);
+
   if (!isOpen) return null;
 
   const aiPlayer = gameState.players[2].isAI ? gameState.players[2] : null;
+
+  const testGeminiAPI = async () => {
+    if (!geminiApiKey || !testWord.trim()) {
+      setTestResult({ success: false, message: 'API key and test word required' });
+      return;
+    }
+
+    setIsTesting(true);
+    setTestResult(null);
+
+    try {
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + geminiApiKey, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Is "${testWord.trim()}" a valid English word according to TWL/SOWPODS dictionary? Respond with only "YES" or "NO".`
+            }]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('API request failed');
+      }
+
+      const data = await response.json();
+      const result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toUpperCase();
+      
+      if (result === 'YES') {
+        setTestResult({ success: true, message: `"${testWord}" is a valid word` });
+      } else if (result === 'NO') {
+        setTestResult({ success: false, message: `"${testWord}" is not a valid word` });
+      } else {
+        setTestResult({ success: false, message: 'Unexpected response format' });
+      }
+    } catch (error) {
+      setTestResult({ success: false, message: 'API connection failed' });
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -115,6 +164,62 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
               </div>
             )}
+
+            {/* Gemini API Integration */}
+            <div className="flex flex-col gap-4 p-6 bg-slate-950/60 rounded-2xl border-2 border-slate-800/60 relative overflow-hidden group hover:border-slate-700 transition-all">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 grid-blueprint opacity-5 pointer-events-none" />
+              <div className="flex items-center gap-3 text-slate-500 mb-1">
+                <div className="p-2 bg-slate-900 rounded-lg border border-slate-800 shadow-md">
+                  <Zap className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest">Gemini API</span>
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">API Key</label>
+                  <input
+                    type="password"
+                    value={geminiApiKey}
+                    onChange={(e) => setGeminiApiKey(e.target.value)}
+                    placeholder="Enter Gemini API key"
+                    className="w-full p-2 bg-slate-900 border border-slate-800 rounded-lg text-[9px] font-mono text-slate-300 placeholder-slate-600 focus:border-yellow-500/50 focus:outline-none transition-all"
+                  />
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <label className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">Test Word</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={testWord}
+                      onChange={(e) => setTestWord(e.target.value)}
+                      placeholder="Enter word to test"
+                      className="flex-1 p-2 bg-slate-900 border border-slate-800 rounded-lg text-[9px] font-mono text-slate-300 placeholder-slate-600 focus:border-yellow-500/50 focus:outline-none transition-all"
+                    />
+                    <button
+                      onClick={testGeminiAPI}
+                      disabled={isTesting || !geminiApiKey || !testWord.trim()}
+                      className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-[8px] font-mono text-slate-400 hover:text-yellow-500 hover:border-yellow-500/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    >
+                      {isTesting ? 'TESTING...' : 'TEST'}
+                    </button>
+                  </div>
+                </div>
+                
+                {testResult && (
+                  <div className={`flex items-center gap-2 p-2 rounded-lg border text-[8px] font-mono ${
+                    testResult.success 
+                      ? 'bg-emerald-950/20 text-emerald-400 border-emerald-500/30' 
+                      : 'bg-red-950/20 text-red-400 border-red-500/30'
+                  }`}>
+                    {testResult.success ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                    <span>{testResult.message}</span>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Game Info */}
             <div className="flex flex-col gap-4 p-6 bg-slate-950/60 rounded-2xl border-2 border-slate-800/60 relative overflow-hidden group hover:border-slate-700 transition-all">

@@ -13,6 +13,7 @@ interface PlacementScreenProps {
   onAutoPlace: (playerId: 1 | 2) => void;
   onQuit: () => void;
   error: string | null;
+  onRemoveAt?: (playerId: 1 | 2, row: number, col: number) => void;
 }
 
 export const PlacementScreen: React.FC<PlacementScreenProps> = ({ 
@@ -22,7 +23,8 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
   onUndo,
   onAutoPlace,
   onQuit,
-  error 
+  error,
+  onRemoveAt
 }) => {
   const [selectedTile, setSelectedTile] = useState<LetterTile | null>(null);
   const [orientation, setOrientation] = useState<'h' | 'v'>('h');
@@ -77,7 +79,16 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
 
       if (availableTile) {
         onPlace(r, c, availableTile, orientation);
-        setSelectedTile(null);
+        // Keep selection to allow rapid repeat placements or repositioning
+      }
+    } else {
+      const cell = player.grid[r][c];
+      if (cell?.tileId) {
+        const fromPool = LETTER_POOL.find(t => t.id === cell.tileId) || SPECIAL_TILES.find(t => t.id === cell.tileId) || null;
+        if (fromPool) {
+          onRemoveAt?.(player.id, r, c);
+          setSelectedTile(fromPool);
+        }
       }
     }
   };
@@ -248,7 +259,14 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                     <Tile 
                       key={t.id} 
                       tile={t} 
-                      onClick={() => !disabled && setSelectedTile(t)}
+                  onClick={() => {
+                    if (disabled) return;
+                    if (selectedTile?.id === t.id) {
+                      setOrientation(prev => prev === 'h' ? 'v' : 'h');
+                    } else {
+                      setSelectedTile(t);
+                    }
+                  }}
                       className={`
                         ${selectedTile?.id === t.id ? 'ring-2 ring-yellow-600 scale-105 z-10' : 'scale-100 opacity-60 hover:opacity-100 transition-all'}
                         ${disabled ? 'opacity-10 grayscale pointer-events-none' : ''}
@@ -271,7 +289,14 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                     <Tile 
                       key={t.id} 
                       tile={t} 
-                      onClick={() => !disabled && setSelectedTile(t)}
+                  onClick={() => {
+                    if (disabled) return;
+                    if (selectedTile?.id === t.id) {
+                      setOrientation(prev => prev === 'h' ? 'v' : 'h');
+                    } else {
+                      setSelectedTile(t);
+                    }
+                  }}
                       className={`
                         ${selectedTile?.id === t.id ? 'ring-2 ring-yellow-600 scale-105 z-10' : 'scale-100 opacity-60 hover:opacity-100 transition-all'}
                         ${disabled ? 'opacity-10 grayscale pointer-events-none' : ''}
@@ -294,7 +319,14 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                     <Tile 
                       key={t.id} 
                       tile={t} 
-                      onClick={() => !disabled && setSelectedTile(t)}
+                  onClick={() => {
+                    if (disabled) return;
+                    if (selectedTile?.id === t.id) {
+                      setOrientation(prev => prev === 'h' ? 'v' : 'h');
+                    } else {
+                      setSelectedTile(t);
+                    }
+                  }}
                       className={`
                         ${selectedTile?.id === t.id ? 'ring-2 ring-yellow-600 scale-105 z-10' : 'scale-100 opacity-60 hover:opacity-100 transition-all'}
                         ${disabled ? 'opacity-10 grayscale pointer-events-none' : ''}
@@ -307,7 +339,14 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                   return (
                     <Tile 
                       tile={wildcard} 
-                      onClick={() => !disabled && setSelectedTile(wildcard)}
+                  onClick={() => {
+                    if (disabled) return;
+                    if (selectedTile?.id === wildcard.id) {
+                      setOrientation(prev => prev === 'h' ? 'v' : 'h');
+                    } else {
+                      setSelectedTile(wildcard);
+                    }
+                  }}
                       className={`
                         ${selectedTile?.id === wildcard.id ? 'ring-2 ring-yellow-600 scale-105 z-10' : 'scale-100 opacity-60 hover:opacity-100 transition-all'}
                         ${disabled ? 'opacity-10 grayscale pointer-events-none' : ''}
@@ -330,7 +369,14 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
                     <Tile 
                       key={t.id} 
                       tile={t} 
-                      onClick={() => !disabled && setSelectedTile(t)}
+                  onClick={() => {
+                    if (disabled) return;
+                    if (selectedTile?.id === t.id) {
+                      setOrientation(prev => prev === 'h' ? 'v' : 'h');
+                    } else {
+                      setSelectedTile(t);
+                    }
+                  }}
                       className={`
                         ${selectedTile?.id === t.id ? 'ring-2 ring-yellow-600 scale-105 z-10' : 'scale-100 opacity-60 hover:opacity-100 transition-all'}
                         ${disabled ? 'opacity-10 grayscale pointer-events-none' : ''}

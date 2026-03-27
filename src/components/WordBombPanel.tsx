@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { LetterTile, BOMB_EFFECTS } from '../constants';
-import { isValidWord } from '../utils/dictionary';
+import { validateWordOnline } from '../utils/dictionary';
 import { Zap, Target, Eye, Wind, Skull, Trash2, X } from 'lucide-react';
 import { Tooltip } from './Tooltip';
 
@@ -35,7 +35,6 @@ export const WordBombPanel: React.FC<WordBombPanelProps> = ({ bank, onExecute, p
   const validate = () => {
     const upperWord = word.trim().toUpperCase();
     if (upperWord.length === 0) return null;
-    if (!isValidWord(upperWord)) return 'Invalid word';
     if (playedWords.includes(upperWord)) return 'Word already played';
     
     // Check bank
@@ -57,10 +56,15 @@ export const WordBombPanel: React.FC<WordBombPanelProps> = ({ bank, onExecute, p
     return null;
   };
 
-  const handleExecute = () => {
+  const handleExecute = async () => {
     const err = validate();
     if (err) {
       setError(err);
+      return;
+    }
+    const ok = await validateWordOnline(word.trim());
+    if (!ok) {
+      setError('Invalid word');
       return;
     }
 

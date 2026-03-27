@@ -12,9 +12,10 @@ interface TileProps {
   className?: string;
   showPoints?: boolean;
   hidden?: boolean;
+  compact?: boolean;
 }
 
-export const Tile: React.FC<TileProps> = ({ tile, isHit, isRevealed, onClick, className, showPoints = true, hidden = false }) => {
+export const Tile: React.FC<TileProps> = ({ tile, isHit, isRevealed, onClick, className, showPoints = true, hidden = false, compact = false }) => {
   const tierStyle = TIERS[tile.tier];
 
   const content = (
@@ -58,7 +59,7 @@ export const Tile: React.FC<TileProps> = ({ tile, isHit, isRevealed, onClick, cl
 
       {/* Main Letter */}
       {!hidden && (
-        <span className={`text-xl font-serif font-black ${tierStyle.textColor} drop-shadow-md z-10 group-hover:scale-110 transition-transform`}>
+        <span className={`${compact ? 'text-sm' : 'text-xl'} font-serif font-black ${tierStyle.textColor} drop-shadow-md z-10 group-hover:scale-110 transition-transform`}>
           {tile.letter === '★' ? <Star className="w-5 h-5 fill-current" /> : tile.letter}
         </span>
       )}
@@ -71,7 +72,7 @@ export const Tile: React.FC<TileProps> = ({ tile, isHit, isRevealed, onClick, cl
       )}
 
       {/* Tier Label */}
-      {!hidden && (
+      {!hidden && !compact && (
         <div className={`absolute bottom-1 left-0 right-0 text-center`}>
           <span className={`text-[7px] font-mono font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-slate-950/60 ${tierStyle.textColor} border border-white/5`}>
             {tierStyle.label}

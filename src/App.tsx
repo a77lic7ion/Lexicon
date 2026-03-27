@@ -14,6 +14,7 @@ export default function App() {
     message,
     error,
     placeTile,
+    removeTileAt,
     finalizeSetup,
     fire,
     executeBomb,
@@ -27,6 +28,7 @@ export default function App() {
     toggleSound,
     isSoundEnabled,
     skipTurn,
+    reorderBank,
   } = useGameLogic();
 
   const [showMenu, setShowMenu] = useState(true);
@@ -55,17 +57,29 @@ export default function App() {
   if (showMenu) {
     return (
       <div className="h-full w-full bg-slate-950 flex items-center justify-center p-6 overflow-hidden relative">
+        {isSettingsOpen && (
+          <SettingsModal
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            gameState={gameState}
+            onRestart={resetGame}
+            onQuit={() => {}}
+            onToggleSound={toggleSound}
+            isSoundEnabled={isSoundEnabled}
+            onSetDifficulty={setDifficulty}
+          />
+        )}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="flex flex-col items-center gap-12 z-10 max-w-4xl w-full relative"
+          className="flex flex-col items-center gap-12 z-10 max-w-5xl w-full relative"
         >
           <div className="flex flex-col items-center gap-8 text-center">
-            <div className="bg-slate-900 p-10 rounded-full border-4 border-slate-800 shadow-2xl relative">
+            <div className="bg-slate-900 p-6 sm:p-8 md:p-10 rounded-full border-4 border-slate-800 shadow-2xl relative">
               <Sword className="w-24 h-24 text-yellow-600 relative z-20" />
             </div>
             <div className="flex flex-col gap-2">
-              <h1 className="text-8xl font-black text-white tracking-tighter italic leading-none">
+              <h1 className="text-6xl sm:text-7xl md:text-8xl font-black text-white tracking-tighter italic leading-none">
                 LEXICON
               </h1>
               <p className="text-slate-600 font-mono text-[10px] font-bold uppercase tracking-[0.4em] italic bg-slate-900 py-1.5 px-6 rounded-full border border-slate-800">
@@ -75,7 +89,7 @@ export default function App() {
           </div>
 
           <div className="flex flex-col gap-10 w-full">
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="flex flex-col gap-3">
                 <label className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest px-2">Commander 1</label>
                 <input
@@ -128,7 +142,7 @@ export default function App() {
               INITIATE
             </button>
 
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <button onClick={() => setShowTutorial(true)} className="p-4 bg-slate-900 hover:bg-slate-800 text-slate-500 rounded-xl font-mono font-bold text-[10px] tracking-widest transition-all flex items-center justify-center gap-4 border border-slate-800 uppercase active:scale-95">
                 <BookOpen className="w-5 h-5" /> Codex
               </button>
@@ -138,7 +152,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-6 w-full bg-slate-900/40 p-8 rounded-3xl border border-slate-800">
+          <div className="flex flex-col gap-6 w-full bg-slate-900/40 p-6 sm:p-8 rounded-3xl border border-slate-800">
             <div className="flex items-center gap-3 text-slate-600 relative z-10">
               <Info className="w-4 h-4" />
               <h4 className="text-[10px] font-mono font-bold uppercase tracking-widest">Victory Protocol</h4>
@@ -221,6 +235,7 @@ export default function App() {
                 onAutoPlace={autoPlace}
                 onQuit={() => setShowMenu(true)}
                 error={error}
+                onRemoveAt={(pid, r, c) => removeTileAt(pid, r, c)}
               />
             )}
           </motion.div>
@@ -237,6 +252,7 @@ export default function App() {
               gameState={gameState}
               onFire={fire}
               onExecuteBomb={executeBomb}
+              onReorderBank={reorderBank}
               onQuit={() => setShowMenu(true)}
               onRestart={resetGame}
               message={message}

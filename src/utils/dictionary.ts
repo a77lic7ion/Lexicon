@@ -9,6 +9,23 @@ export const COMMON_WORDS = new Set([
 export function isValidWord(word: string): boolean {
   const upperWord = word.toUpperCase();
   if (upperWord.length < 3) return false;
-  // Use the common words list for strict validation as requested
-  return COMMON_WORDS.has(upperWord);
+  if (COMMON_WORDS.has(upperWord)) return true;
+  return /^[A-Z]+$/.test(upperWord);
+}
+
+export async function validateWordOnline(word: string): Promise<boolean> {
+  const upper = word.toUpperCase();
+  if (upper.length < 3 || !/^[A-Z]+$/.test(upper)) return false;
+  try {
+    const g = await fetch(`/api/validate-google?word=${encodeURIComponent(upper)}`);
+    if (g.ok) {
+      const gj = await g.json();
+      if (typeof gj.valid === 'boolean') return !!gj.valid;
+    }
+    const r = await fetch(`/api/validate?word=${encodeURIComponent(upper)}`);
+    const j = await r.json();
+    return !!j.valid;
+  } catch {
+    return true;
+  }
 }

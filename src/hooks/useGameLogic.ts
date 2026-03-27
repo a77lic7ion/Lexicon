@@ -160,6 +160,44 @@ export const useGameLogic = () => {
     });
   };
 
+  const removeTileAt = (player: 1 | 2, row: number, col: number) => {
+    setGameState(prev => {
+      const p = prev.players[player];
+      const cell = p.grid[row][col];
+      if (!cell.tileId) return prev;
+
+      const targetId = cell.tileId;
+      const newGrid = p.grid.map(r => r.map(c => ({ ...c })));
+
+      for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+          if (newGrid[r][c].tileId === targetId) {
+            newGrid[r][c] = {
+              row: r, col: c,
+              tileId: null, letter: null, tier: null,
+              isHit: false, isMiss: false
+            };
+          }
+        }
+      }
+
+      const newHistory = (p.placementHistory || []).filter(h => h.tileId !== targetId);
+
+      return {
+        ...prev,
+        players: {
+          ...prev.players,
+          [player]: {
+            ...p,
+            grid: newGrid,
+            tilesPlaced: Math.max(0, p.tilesPlaced - 1),
+            placementHistory: newHistory,
+          }
+        }
+      };
+    });
+  };
+
   const autoPlace = (player: 1 | 2) => {
     let currentGrid = createEmptyGrid();
     let placedCount = 0;
@@ -207,8 +245,9 @@ export const useGameLogic = () => {
       toPlace.push(...remainingPool.slice(0, needed));
     }
 
+    // Ensure we end with exactly 15 tiles; relax buffer quickly if needed
     let globalAttempts = 0;
-    while (placedCount < 15 && globalAttempts < 10) {
+    while (placedCount < 15 && globalAttempts < 30) {
       globalAttempts++;
       currentGrid = createEmptyGrid();
       placedCount = 0;
@@ -239,8 +278,7 @@ export const useGameLogic = () => {
           }
 
           if (valid) {
-            // Buffer check - relax if struggling
-            const bufferSize = globalAttempts < 5 ? 1 : 0;
+            const bufferSize = globalAttempts < 3 ? 1 : 0;
             if (bufferSize > 0) {
               for (const cell of cells) {
                 for (let dr = -bufferSize; dr <= bufferSize; dr++) {
@@ -1096,6 +1134,7 @@ export const useGameLogic = () => {
     toggleAI,
     setDifficulty,
     undoPlacement,
+    removeTileAt,
     autoPlace,
     toggleSound,
     isSoundEnabled,
@@ -1103,4 +1142,4 @@ export const useGameLogic = () => {
     reorderBank,
   };
 };
-
+ 

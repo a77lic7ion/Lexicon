@@ -42,7 +42,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
         {/* Column Labels */}
         <div className="grid grid-cols-10 gap-0">
           {cols.map(c => (
-            <div key={c} className="w-[6.5vmin] h-[3.5vmin] flex items-center justify-center text-[10px] font-mono text-slate-500 uppercase">
+            <div key={c} className="w-[7.5vmin] h-[3.75vmin] flex items-center justify-center text-[10px] font-mono text-slate-500 uppercase">
               {c}
             </div>
           ))}
@@ -51,7 +51,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
         {/* Row Labels */}
         <div className="grid grid-rows-10 gap-0">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="w-[3.5vmin] h-[6.5vmin] flex items-center justify-center text-[10px] font-mono text-slate-500">
+            <div key={i} className="w-[3.75vmin] h-[7.5vmin] flex items-center justify-center text-[10px] font-mono text-slate-500">
               {i + 1}
             </div>
           ))}
@@ -101,15 +101,17 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
                 onClick={() => onCellClick(r, c)}
                 onMouseEnter={() => onCellMouseEnter?.(r, c)}
                 className={`
-                  w-[6.5vmin] h-[6.5vmin] ${bgColor}
+                  w-[7.5vmin] h-[7.5vmin] ${bgColor}
                   flex items-center justify-center cursor-pointer relative
                   transition-colors duration-100 group
                   hover:bg-slate-800/40
                 `}
               >
-                {/* My Ship Indicator */}
+                {/* My Tile Indicator with Letter */}
                 {hasMyTile && !isMyTileHit && (
-                  <div className="w-2 h-2 rounded-full bg-slate-700" />
+                  <span className="text-sm font-bold text-slate-400">
+                    {myCell.letter}
+                  </span>
                 )}
 
                 {/* Enemy Hit on Me */}
@@ -133,7 +135,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
                   <X className="w-4 h-4 text-slate-800" />
                 )}
 
-                {/* Revealed Enemy Ship */}
+                {/* Revealed Enemy Letter */}
                 {isOppRevealed && !iHitThem && (
                   <div className="w-1.5 h-1.5 rounded-full bg-yellow-600/50" />
                 )}
@@ -147,7 +149,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
       <div className="flex gap-6 justify-center text-[10px] font-mono text-slate-500 uppercase">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-slate-700" />
-          <span>Ship</span>
+          <span>Letter</span>
         </div>
         <div className="flex items-center gap-2">
           <Target className="w-3 h-3 text-red-600" />
