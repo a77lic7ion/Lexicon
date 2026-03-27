@@ -123,6 +123,7 @@ export const useGameLogic = () => {
   };
 
   const undoPlacement = (player: 1 | 2) => {
+    setError(null);
     setGameState(prev => {
       const p = prev.players[player];
       if (!p.placementHistory || p.placementHistory.length === 0) return prev;
@@ -161,6 +162,7 @@ export const useGameLogic = () => {
   };
 
   const removeTileAt = (player: 1 | 2, row: number, col: number) => {
+    setError(null);
     setGameState(prev => {
       const p = prev.players[player];
       const cell = p.grid[row][col];
@@ -199,6 +201,7 @@ export const useGameLogic = () => {
   };
 
   const autoPlace = (player: 1 | 2) => {
+    setError(null);
     let currentGrid = createEmptyGrid();
     let placedCount = 0;
     let history: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[] = [];
@@ -247,7 +250,7 @@ export const useGameLogic = () => {
 
     // Ensure we end with exactly 15 tiles; relax buffer quickly if needed
     let globalAttempts = 0;
-    while (placedCount < 15 && globalAttempts < 30) {
+    while (placedCount < 15 && globalAttempts < 100) {
       globalAttempts++;
       currentGrid = createEmptyGrid();
       placedCount = 0;

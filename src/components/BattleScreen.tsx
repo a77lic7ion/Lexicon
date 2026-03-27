@@ -274,15 +274,46 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   }
 
   return (
-    <div className="flex flex-row gap-0 bg-slate-950 h-full w-full relative overflow-hidden">
-      {/* Logo Name - Top Left */}
-      <div className="absolute top-2 left-2 z-40">
-        <span className="text-2xl font-serif font-black text-yellow-500 tracking-tight uppercase drop-shadow-lg">LEXICON</span>
+    <div className="grid grid-cols-[240px_1fr_360px] bg-slate-950 h-screen w-full relative overflow-hidden">
+      {/* LEFT COLUMN: Logo & Win Conditions */}
+      <div className="flex flex-col gap-6 p-4 border-r border-slate-900 bg-slate-950/50 overflow-y-auto custom-scrollbar">
+        <div className="flex flex-col gap-4">
+          <img 
+            src="/new logo.png" 
+            alt="LEXICON Logo" 
+            className="w-full object-contain rounded-lg border border-slate-800 shadow-xl"
+          />
+          <span className="text-xl font-serif font-black text-yellow-500 tracking-tight uppercase text-center">LEXICON</span>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2 text-slate-500 px-1">
+            <Trophy className="w-4 h-4" />
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest">Win Conditions</span>
+          </div>
+          <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-4 flex flex-col gap-3 shadow-inner">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-mono text-slate-500 uppercase font-bold">Classic</span>
+              <span className="text-[10px] font-mono text-slate-300 bg-slate-800 px-2 py-0.5 rounded">15 Tiles</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-mono text-slate-500 uppercase font-bold">Lexicon</span>
+              <span className="text-[10px] font-mono text-slate-300 bg-slate-800 px-2 py-0.5 rounded">100 Pts</span>
+            </div>
+            <div className="pt-2 border-t border-slate-800 mt-1">
+              <p className="text-[9px] font-mono text-slate-600 italic leading-relaxed">
+                {gameState.winMode === 'classic' && 'Destroy all 15 enemy tiles to achieve victory.'}
+                {gameState.winMode === 'lexicon' && 'Fire an 8-letter bomb to achieve victory.'}
+                {gameState.winMode === 'hybrid' && 'Destroy 10 tiles OR fire 7-letter bomb.'}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Main Content - Expanded */}
-      <div className="flex-1 flex flex-col items-center justify-center p-2 px-[1cm] min-h-0 overflow-hidden">
-        <div className="flex flex-col items-center justify-center w-full max-w-none h-full py-2">
+      {/* MIDDLE COLUMN: Game Board */}
+      <div className="flex flex-col items-center justify-center p-4 min-h-0 overflow-hidden bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900/20 to-transparent">
+        <div className="w-full h-full flex items-center justify-center">
           <UnifiedGrid
             myGrid={viewingPlayer.grid}
             opponentGrid={opponent.grid}
@@ -296,70 +327,59 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
         </div>
       </div>
 
-      <div className="w-64 md:w-72 border-l border-slate-900 bg-slate-950 flex flex-col h-screen relative z-20 shrink-0">
-        <div className="p-3 flex flex-col h-full overflow-y-auto custom-scrollbar">
-          {/* Top: Opponent Info */}
-          <div className="flex flex-col gap-2 mb-3">
-            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-600 truncate">
-              {opponent.name}
-            </span>
+      {/* RIGHT COLUMN: Player Info & Controls */}
+      <div className="border-l border-slate-900 bg-slate-950 flex flex-col h-screen relative z-20 shrink-0 overflow-hidden">
+        <div className="p-4 flex flex-col h-full overflow-y-auto custom-scrollbar gap-6">
+          {/* Opponent Section */}
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-between items-baseline px-1">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600">
+                Enemy Commander
+              </span>
+              <span className="text-xs font-bold text-red-600 uppercase italic">
+                {opponent.name}
+              </span>
+            </div>
             {renderBankGrid(opponent.bank, true, false)}
           </div>
 
-          {/* Center: Victory Conditions */}
-          <div className="flex flex-col gap-2 mb-3">
-            <div className="flex items-center gap-2 text-slate-600">
-              <Trophy className="w-3 h-3" />
-              <span className="text-[9px] font-mono font-bold uppercase tracking-widest">Victory</span>
-            </div>
-            <div className="bg-slate-900/50 rounded border border-slate-800 p-2 flex flex-col gap-1.5">
-              <div className="flex justify-between items-center text-[8px] font-mono">
-                <span className="text-slate-500 uppercase">Classic</span>
-                <span className="text-slate-300">15 Tiles</span>
-              </div>
-              <div className="flex justify-between items-center text-[8px] font-mono">
-                <span className="text-slate-500 uppercase">Lexicon</span>
-                <span className="text-slate-300">100 Pts</span>
-              </div>
-            </div>
-          </div>
+          <div className="h-px bg-slate-900 mx-2" />
 
-          {/* Separator */}
-          <div className="flex items-center justify-center py-2">
-            <span className="text-[8px] font-mono text-slate-600 uppercase tracking-widest">●</span>
-          </div>
-
-          {/* Bottom: Word Bomb + controls - Expanded */}
-          <div className="flex-1 flex flex-col justify-center gap-3 py-2 min-h-0">
+          {/* Turn & Status Section */}
+          <div className="flex flex-col gap-4">
             <AnimatePresence mode="wait">
               <motion.div
                 key={message}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="w-full p-1.5 bg-slate-900 text-slate-400 text-[10px] font-mono text-center uppercase border border-slate-800"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`w-full p-3 rounded-lg text-center uppercase border shadow-lg ${
+                  isTargeting 
+                  ? 'bg-yellow-900/20 border-yellow-600/50 text-yellow-500' 
+                  : 'bg-slate-900 border-slate-800 text-slate-400'
+                } text-[11px] font-mono font-bold`}
               >
                 {isTargeting ? `SELECT TARGET: ${currentEffect?.name}` : message}
               </motion.div>
             </AnimatePresence>
 
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={onSkipTurn}
                 disabled={!isMyTurn}
-                className="flex-1 p-2 bg-slate-950 text-slate-600 border border-slate-900 text-[9px] font-bold uppercase hover:bg-slate-900 disabled:opacity-30"
+                className="col-span-1 p-2 bg-slate-900 hover:bg-slate-800 text-slate-500 border border-slate-800 rounded font-mono text-[9px] font-bold uppercase transition-all disabled:opacity-30"
               >
-                SKIP TURN
+                Skip
               </button>
               <button
                 onClick={() => setIsSettingsModalOpen(true)}
-                className="p-2 bg-slate-950 text-slate-600 border border-slate-900 hover:bg-slate-900"
+                className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-500 border border-slate-800 rounded flex items-center justify-center transition-all"
                 title="Settings"
               >
                 <Settings className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setIsHistoryModalOpen(true)}
-                className="p-2 bg-slate-950 text-slate-600 border border-slate-900 hover:bg-slate-900"
+                className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-500 border border-slate-800 rounded flex items-center justify-center transition-all"
                 title="Game History"
               >
                 <History className="w-4 h-4" />
@@ -367,105 +387,151 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
             </div>
 
             {error && (
-              <div className="p-2 bg-red-950/20 text-red-600 text-[9px] font-mono uppercase text-center border border-red-900/30">
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="p-2 bg-red-950/20 text-red-500 text-[10px] font-mono uppercase text-center border border-red-900/30 rounded"
+              >
                 {error}
-              </div>
+              </motion.div>
             )}
-            
-            <div className="flex flex-col gap-2 flex-1">
-              <div className="flex items-center gap-2 text-slate-600">
-                <Zap className="w-3 h-3" />
-                <span className="text-[9px] font-mono font-bold uppercase tracking-widest">Word Bomb</span>
-              </div>
-              <div className="grid grid-cols-[1fr] gap-2 p-2 bg-slate-950 border border-slate-900 rounded flex-1">
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex flex-wrap gap-1 min-h-[28px]">
-                    {assembly.map((t, i) => (
-                      <div key={`${t.id}-${i}`} className="relative">
-                        <Tile tile={{ id: t.id, letter: t.letter, tier: 'common', points: 0, size: 1 } as any} className="w-6 h-6" showPoints={false} />
-                        <button onClick={() => setAssembly(prev => prev.filter((_, idx) => idx !== i))} className="absolute -top-1 -right-1 text-[8px] px-1 bg-slate-800 text-slate-400 border border-slate-700">x</button>
-                      </div>
-                    ))}
-                    {assembly.length === 0 && <span className="text-[8px] font-mono text-slate-600 uppercase">Click tiles to add</span>}
-                  </div>
-                  {wildPickFor && (
-                    <div className="grid grid-cols-6 gap-1">
-                      {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(ch => (
-                        <button key={ch} onClick={() => { setAssembly(prev => [...prev, { id: wildPickFor, letter: ch }]); setWildPickFor(null); }} className="p-1 text-[9px] font-mono bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800">
-                          {ch}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {bombError && (
-                    <span className="text-[8px] font-mono font-bold text-red-600 uppercase">
-                      // {bombError}
-                    </span>
-                  )}
-                  {currentEffect && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-bold text-yellow-600 uppercase">{currentEffect.name}</span>
-                      <span className="text-[8px] font-mono text-slate-600 uppercase italic truncate">
-                        — {currentEffect.description}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex gap-1">
-                    <button onClick={() => setAssembly([])} className="flex-1 p-1 text-[8px] font-mono bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 uppercase">Clear</button>
-                  </div>
-                </div>
+          </div>
 
-                <div className="flex flex-col gap-2">
-                  {isTargeting ? (
-                    <div className="flex flex-col gap-1.5">
-                      {(wordLen === 3 || wordLen === 5 || wordLen >= 8) && (
-                        <div className="flex gap-1 p-1 bg-slate-900 border border-slate-800">
-                          <button 
-                            onClick={() => setRowColToggle('row')}
-                            className={`flex-1 py-1 text-[8px] font-mono font-bold transition-all ${rowColToggle === 'row' ? 'bg-yellow-600 text-slate-950' : 'text-slate-600'}`}
-                          >ROW</button>
-                          <button 
-                            onClick={() => setRowColToggle('col')}
-                            className={`flex-1 py-1 text-[8px] font-mono font-bold transition-all ${rowColToggle === 'col' ? 'bg-yellow-600 text-slate-950' : 'text-slate-600'}`}
-                          >COL</button>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => setIsTargeting(false)}
-                        className="w-full p-2 bg-slate-900 text-red-600 border border-red-900/30 font-bold text-[8px] uppercase tracking-widest hover:bg-slate-800 transition-all"
-                      >
-                        CANCEL
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={handleArmBomb}
-                      disabled={!isMyTurn || assembly.length < 3}
-                      className="w-full p-3 bg-slate-900 text-slate-400 border border-slate-800 font-bold text-[10px] uppercase hover:bg-slate-800 disabled:opacity-30 transition-colors flex items-center justify-center gap-2"
+          <div className="h-px bg-slate-900 mx-2" />
+
+          {/* Word Bomb Section */}
+          <div className="flex flex-col gap-3 flex-1 min-h-0">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2 text-slate-500">
+                <Zap className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest">Tactical Bomb</span>
+              </div>
+              {assembly.length > 0 && (
+                <button 
+                  onClick={() => setAssembly([])} 
+                  className="text-[9px] font-mono text-red-500 hover:text-red-400 uppercase font-bold"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            
+            <div className="flex flex-col gap-3 p-3 bg-slate-900/40 border border-slate-800 rounded-xl shadow-inner min-h-[140px]">
+              <div className="flex flex-wrap gap-2 min-h-[40px] items-start">
+                {assembly.map((t, i) => (
+                  <motion.div 
+                    key={`${t.id}-${i}`} 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="relative"
+                  >
+                    <Tile tile={{ id: t.id, letter: t.letter, tier: 'common', points: 0, size: 1 } as any} className="w-8 h-8 rounded-lg shadow-md" showPoints={false} />
+                    <button 
+                      onClick={() => setAssembly(prev => prev.filter((_, idx) => idx !== i))} 
+                      className="absolute -top-1.5 -right-1.5 text-[8px] w-4 h-4 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:bg-red-900 hover:text-white transition-colors"
                     >
-                      <Zap className="w-3 h-3" /> ARM BOMB
+                      ×
                     </button>
-                  )}
+                  </motion.div>
+                ))}
+                {assembly.length === 0 && (
+                  <div className="w-full flex flex-col items-center justify-center py-4 text-slate-700 gap-1 opacity-50">
+                    <span className="text-[9px] font-mono uppercase tracking-widest">Assembly Required</span>
+                    <span className="text-[8px] font-mono italic">Select tiles to build bomb</span>
+                  </div>
+                )}
+              </div>
+
+              {wildPickFor && (
+                <div className="grid grid-cols-7 gap-1 p-2 bg-slate-950 rounded border border-slate-800 mt-1">
+                  {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(ch => (
+                    <button 
+                      key={ch} 
+                      onClick={() => { setAssembly(prev => [...prev, { id: wildPickFor, letter: ch }]); setWildPickFor(null); }} 
+                      className="aspect-square flex items-center justify-center text-[10px] font-mono bg-slate-900 border border-slate-800 text-slate-400 hover:bg-yellow-600 hover:text-slate-950 transition-all rounded"
+                    >
+                      {ch}
+                    </button>
+                  ))}
                 </div>
+              )}
+
+              {bombError && (
+                <span className="text-[9px] font-mono font-bold text-red-600 uppercase bg-red-950/20 px-2 py-1 rounded">
+                  {bombError}
+                </span>
+              )}
+
+              {currentEffect && (
+                <div className="flex flex-col gap-1 p-2 bg-yellow-950/10 border border-yellow-900/20 rounded">
+                  <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-tight">{currentEffect.name}</span>
+                  <span className="text-[9px] font-mono text-slate-500 leading-tight">
+                    {currentEffect.description}
+                  </span>
+                </div>
+              )}
+
+              <div className="mt-auto">
+                {isTargeting ? (
+                  <div className="flex flex-col gap-2">
+                    {(wordLen === 3 || wordLen === 5 || wordLen >= 8) && (
+                      <div className="flex gap-1 p-1 bg-slate-950 rounded border border-slate-800">
+                        <button 
+                          onClick={() => setRowColToggle('row')}
+                          className={`flex-1 py-1.5 text-[9px] font-mono font-bold transition-all rounded ${rowColToggle === 'row' ? 'bg-yellow-600 text-slate-950' : 'text-slate-500'}`}
+                        >ROW</button>
+                        <button 
+                          onClick={() => setRowColToggle('col')}
+                          className={`flex-1 py-1.5 text-[9px] font-mono font-bold transition-all rounded ${rowColToggle === 'col' ? 'bg-yellow-600 text-slate-950' : 'text-slate-500'}`}
+                        >COL</button>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setIsTargeting(false)}
+                      className="w-full p-2.5 bg-red-950/20 text-red-500 border border-red-900/30 rounded font-bold text-[10px] uppercase tracking-widest hover:bg-red-900/20 transition-all"
+                    >
+                      Cancel Target
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleArmBomb}
+                    disabled={!isMyTurn || assembly.length < 3}
+                    className="w-full p-3 bg-yellow-600 hover:bg-yellow-500 disabled:bg-slate-900 text-slate-950 disabled:text-slate-700 rounded-xl border-b-4 border-yellow-700 disabled:border-slate-800 font-black text-[12px] uppercase transition-all flex items-center justify-center gap-2 active:translate-y-0.5 active:border-b-0 shadow-lg"
+                  >
+                    <Zap className="w-4 h-4 fill-current" /> ARM BOMB
+                  </button>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Bottom: My bank */}
-          <div className="flex flex-col gap-1 mt-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-600 truncate">
-                {viewingPlayer.name}
+          <div className="h-px bg-slate-900 mx-2" />
+
+          {/* Active Player Section */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600">
+                Commanding Officer
               </span>
-              <button
-                onClick={() => {
-                  setSwapMode(m => !m);
-                  setSwapIndex(null);
-                }}
-                className="text-[8px] font-mono text-slate-500 border border-slate-800 px-1"
-              >
-                {swapMode ? 'Done' : 'Swap'}
-              </button>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-emerald-500 uppercase italic">
+                  {viewingPlayer.name}
+                </span>
+                <button
+                  onClick={() => {
+                    setSwapMode(m => !m);
+                    setSwapIndex(null);
+                  }}
+                  className={`text-[9px] font-mono px-2 py-0.5 rounded transition-all border ${
+                    swapMode 
+                    ? 'bg-yellow-600 text-slate-950 border-yellow-700 font-bold' 
+                    : 'text-slate-500 border-slate-800 hover:border-slate-600'
+                  }`}
+                >
+                  {swapMode ? 'FINISH' : 'SWAP'}
+                </button>
+              </div>
             </div>
             {renderBankGrid(viewingPlayer.bank, false, true)}
           </div>

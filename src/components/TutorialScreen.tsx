@@ -99,7 +99,7 @@ const STAGES = [
     content: (
       <div className="flex flex-col gap-6">
         <p className="text-slate-400">Convert harvested letters into devastating tactical strikes. Longer words unlock higher tiers.</p>
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-3">
           {[
             { len: 3, name: "SPARK", desc: "Scan row/col for tile presence", color: "bg-yellow-500" },
             { len: 4, name: "BLAST", desc: "Precision strike on a single cell", color: "bg-orange-500" },
@@ -191,20 +191,20 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({ onBack }) => {
   const prev = () => setCurrentStage(prev => Math.max(prev - 1, 0));
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-12 relative overflow-hidden grid-blueprint">
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-start p-6 sm:p-12 relative overflow-y-auto custom-scrollbar grid-blueprint">
       {/* Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-blue-500/5 rounded-full blur-[150px] pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-slate-900/90 border-8 border-slate-800 rounded-[5rem] shadow-[0_60px_120px_rgba(0,0,0,0.8)] w-full max-w-3xl overflow-hidden z-10 backdrop-blur-md relative"
+        className="bg-slate-900/90 border-4 sm:border-8 border-slate-800 rounded-[2rem] sm:rounded-[5rem] shadow-[0_60px_120px_rgba(0,0,0,0.8)] w-full max-w-6xl z-10 backdrop-blur-md relative my-4"
       >
         {/* Inner Bezel */}
-        <div className="absolute inset-2 rounded-[4.5rem] border-4 border-white/5 bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-10" />
+        <div className="absolute inset-2 rounded-[1.5rem] sm:rounded-[4.5rem] border-4 border-white/5 bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-10" />
         <div className="absolute inset-0 grid-blueprint opacity-10 pointer-events-none" />
         
-        <div className="p-16 flex flex-col gap-12 relative z-20">
+        <div className="p-8 sm:p-10 flex flex-col gap-8 relative z-20">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-8">
               <div className="p-6 bg-slate-950 rounded-3xl border-4 border-slate-800 shadow-2xl relative group">
@@ -223,13 +223,14 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({ onBack }) => {
             </div>
             <button
               onClick={onBack}
+              title="Back to Home"
               className="p-5 text-slate-600 hover:text-white hover:bg-slate-800 rounded-3xl border-4 border-transparent hover:border-slate-700 transition-all shadow-xl group"
             >
               <Home className="w-10 h-10 group-hover:scale-110 transition-transform" />
             </button>
           </div>
 
-          <div className="min-h-[450px] flex flex-col gap-10">
+          <div className="min-h-[300px] flex flex-col gap-6">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStage}
@@ -253,7 +254,7 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({ onBack }) => {
             </AnimatePresence>
           </div>
 
-          <div className="flex justify-between items-center pt-12 border-t-4 border-slate-800/50">
+          <div className="flex justify-between items-center pt-8 border-t-4 border-slate-800/50">
             <button
               onClick={prev}
               disabled={currentStage === 0}

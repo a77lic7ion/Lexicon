@@ -56,7 +56,7 @@ export default function App() {
 
   if (showMenu) {
     return (
-      <div className="h-full w-full bg-slate-950 flex items-center justify-center p-6 overflow-hidden relative">
+      <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-start p-4 overflow-y-auto relative custom-scrollbar">
         {isSettingsOpen && (
           <SettingsModal
             isOpen={isSettingsOpen}
@@ -72,20 +72,14 @@ export default function App() {
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="flex flex-col items-center gap-12 z-10 max-w-5xl w-full relative"
+          className="flex flex-col items-center gap-8 z-10 w-full max-w-6xl relative mx-auto"
         >
-          <div className="flex flex-col items-center gap-8 text-center">
-            <div className="bg-slate-900 p-6 sm:p-8 md:p-10 rounded-full border-4 border-slate-800 shadow-2xl relative">
-              <Sword className="w-24 h-24 text-yellow-600 relative z-20" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <h1 className="text-6xl sm:text-7xl md:text-8xl font-black text-white tracking-tighter italic leading-none">
-                LEXICON
-              </h1>
-              <p className="text-slate-600 font-mono text-[10px] font-bold uppercase tracking-[0.4em] italic bg-slate-900 py-1.5 px-6 rounded-full border border-slate-800">
-                Strategic Word-Harvesting
-              </p>
-            </div>
+          <div className="flex flex-col items-center gap-6 text-center">
+            <img 
+              src="/new logo.png" 
+              alt="LEXICON Logo" 
+              className="w-full max-w-5xl max-h-[45vh] object-contain relative z-20"
+            />
           </div>
 
           <div className="flex flex-col gap-10 w-full">
@@ -150,6 +144,7 @@ export default function App() {
                 <Settings className="w-5 h-5" /> Config
               </button>
             </div>
+
           </div>
 
           <div className="flex flex-col gap-6 w-full bg-slate-900/40 p-6 sm:p-8 rounded-3xl border border-slate-800">
@@ -182,7 +177,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-full w-full bg-slate-950 text-slate-100 font-sans selection:bg-yellow-500/30 overflow-hidden">
+    <div className="h-full w-full bg-slate-950 text-slate-100 font-sans selection:bg-yellow-500/30">
       <AnimatePresence mode="wait">
         {isSettingsOpen && (
           <SettingsModal
