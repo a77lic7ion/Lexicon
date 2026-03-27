@@ -14,7 +14,7 @@ Players must strategically position **15 tactical units** on a 10x10 grid.
 
 * **Buffer Rule**: Every unit must have at least a 1-cell empty buffer around it (no adjacent units, including diagonals).
 * **Tier Constraints**:
-  * **Common (1x1)**: Standard units. Minimum 3 vowels required.
+  * **Common (1x1)**: Standard units. Minimum **5-6 vowels** required (guarantees ~40% lexical density).
   * **Uncommon (1x2)**: Larger units that occupy two cells.
   * **Rare (1x1)**: High-value units. Maximum 2 allowed.
   * **Wildcard (★)**: Flexible unit. Maximum 1 allowed.
@@ -34,8 +34,8 @@ Players take turns "striking" cells on a **Unified Grid**.
 
 The length of the word you create determines the magnitude of the tactical strike:
 
-| Word Length    | Effect Name   | Description                                                       | Targeting         |
-|:-------------- |:------------- |:----------------------------------------------------------------- |:----------------- |
+| Word Length    | Effect Name   | Description                                           | Targeting         |
+|:-------------- |:------------- |:----------------------------------------------------- |:----------------- |
 | **3 Letters**  | **Spark**     | Scans a row/column for the presence of enemy tiles.   | Row/Col Selection |
 | **4 Letters**  | **Blast**     | Precision strike on a single targeted cell.           | Single Cell       |
 | **5 Letters**  | **Surge**     | Reveals all tile positions in a targeted row or column.| Row/Col Selection |
@@ -58,12 +58,12 @@ The length of the word you create determines the magnitude of the tactical strik
 ### Design Evolution & Refinements
 
 1. **Definitive 3-Column Command Center**: The interface is anchored by a structured 3-column grid:
-    *   **Left (Branding & Intel)**: High-fidelity mission logo and "Victory Protocol" win conditions.
-    *   **Middle (Tactical Area)**: The **Expanded Unified Grid** dominates the screen, scaling to maximum visibility.
-    *   **Right (Command & Control)**: Dual-player racks, Word Bomb assembly, and turn-status telemetry.
+    * **Left (Branding & Intel)**: High-fidelity mission logo and "Victory Protocol" win conditions.
+    * **Middle (Tactical Area)**: The **Expanded Unified Grid** dominates the screen, scaling to maximum visibility.
+    * **Right (Command & Control)**: Dual-player racks, Word Bomb assembly, and turn-status telemetry.
 2. **Tactical Codex (Tutorial)**: A dedicated rulebook module provides interactive guidance on deployment, tiers, and Word Bomb mechanics.
 3. **Advanced Scaling Logic**: Components dynamically adjust to viewport dimensions, with sophisticated vertical and horizontal scrolling management to ensure "Mission Integrity" across all devices.
-4. **Optimized Auto-Deployment**: A multi-attempt heuristic algorithm (100+ global passes) guarantees a valid, rule-compliant 15-tile layout for players who prefer rapid initial deployment.
+4. **Robust Auto-Deployment**: A multi-attempt heuristic algorithm guarantees a valid, rule-compliant 15-tile layout. Integrated an **Emergency Fallback** that forces placement in any available cells if the randomized buffer rule fails after multiple global passes.
 5. **Word Bomb Assembly Area**: Redesigned as a vertical sidebar component for better parity with the board and tactile word-building.
 
 ---

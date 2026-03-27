@@ -243,26 +243,28 @@ export const useGameLogic = () => {
     
     // 6. Fill remaining to 15 with Common/Uncommon
     const remainingPool = shuffle(pool.filter(t => !toPlace.find(p => p.id === t.id)));
-    const needed = 15 - toPlace.length;
-    if (needed > 0) {
-      toPlace.push(...remainingPool.slice(0, needed));
+    if (toPlace.length > 15) {
+      toPlace.splice(15); // Trim if over 15 (e.g. too many specials/uncommons)
+    } else {
+      const needed = 15 - toPlace.length;
+      if (needed > 0) {
+        toPlace.push(...remainingPool.slice(0, needed));
+      }
     }
 
-    // Ensure we end with exactly 15 tiles; relax buffer quickly if needed
     let globalAttempts = 0;
-    while (placedCount < 15 && globalAttempts < 100) {
+    while (placedCount < 15 && globalAttempts < 40) {
       globalAttempts++;
       currentGrid = createEmptyGrid();
       placedCount = 0;
       history = [];
 
-      // Shuffle toPlace order for even more variety in layout
       const shuffledToPlace = shuffle(toPlace);
 
       for (const tile of shuffledToPlace) {
         let placed = false;
         let attempts = 0;
-        while (!placed && attempts < 100) {
+        while (!placed && attempts < 50) {
           attempts++;
           const r = Math.floor(Math.random() * GRID_SIZE);
           const c = Math.floor(Math.random() * GRID_SIZE);
@@ -281,7 +283,7 @@ export const useGameLogic = () => {
           }
 
           if (valid) {
-            const bufferSize = globalAttempts < 3 ? 1 : 0;
+            const bufferSize = globalAttempts < 5 ? 1 : 0;
             if (bufferSize > 0) {
               for (const cell of cells) {
                 for (let dr = -bufferSize; dr <= bufferSize; dr++) {
@@ -317,7 +319,38 @@ export const useGameLogic = () => {
             history.push({ row: r, col: c, tileId: tile.id, size: tile.size, orientation });
             placedCount++;
             placed = true;
+            if (placedCount >= 15) break; 
           }
+        }
+        if (placedCount >= 15) break; 
+      }
+    }
+
+    // Force placement if still not 15 (Emergency Fallback)
+    if (placedCount < 15) {
+      const remainingTiles = toPlace.filter(t => !history.find(h => h.tileId === t.id));
+      for (const tile of remainingTiles) {
+        if (placedCount >= 15) break;
+        let forced = false;
+        for (let r = 0; r < GRID_SIZE; r++) {
+          for (let c = 0; c < GRID_SIZE; c++) {
+            if (!currentGrid[r][c].tileId) {
+              currentGrid[r][c] = {
+                ...currentGrid[r][c],
+                tileId: tile.id,
+                letter: tile.letter,
+                tier: tile.tier,
+                isSpecial: tile.isSpecial,
+                hitsRequired: tile.isSpecial === 'vault' ? 2 : 1,
+                hitsReceived: 0,
+              };
+              history.push({ row: r, col: c, tileId: tile.id, size: 1, orientation: 'h' });
+              placedCount++;
+              forced = true;
+              break;
+            }
+          }
+          if (forced) break;
         }
       }
     }
@@ -1013,13 +1046,17 @@ export const useGameLogic = () => {
     
     // 6. Fill remaining to 15
     const remainingPool = shuffle(pool.filter(t => !toPlace.find(p => p.id === t.id)));
-    const needed = 15 - toPlace.length;
-    if (needed > 0) {
-      toPlace.push(...remainingPool.slice(0, needed));
+    if (toPlace.length > 15) {
+      toPlace.splice(15);
+    } else {
+      const needed = 15 - toPlace.length;
+      if (needed > 0) {
+        toPlace.push(...remainingPool.slice(0, needed));
+      }
     }
 
     let globalAttempts = 0;
-    while (placedCount < 15 && globalAttempts < 10) {
+    while (placedCount < 15 && globalAttempts < 40) {
       globalAttempts++;
       currentGrid = createEmptyGrid();
       placedCount = 0;
@@ -1030,7 +1067,7 @@ export const useGameLogic = () => {
       for (const tile of shuffledToPlace) {
         let placed = false;
         let attempts = 0;
-        while (!placed && attempts < 100) {
+        while (!placed && attempts < 50) {
           attempts++;
           const r = Math.floor(Math.random() * GRID_SIZE);
           const c = Math.floor(Math.random() * GRID_SIZE);
@@ -1085,12 +1122,44 @@ export const useGameLogic = () => {
             history.push({ row: r, col: c, tileId: tile.id, size: tile.size, orientation });
             placedCount++;
             placed = true;
+            if (placedCount >= 15) break;
           }
+        }
+        if (placedCount >= 15) break;
+      }
+    }
+
+    // Force placement if still not 15 (Emergency Fallback)
+    if (placedCount < 15) {
+      const remainingTiles = toPlace.filter(t => !history.find(h => h.tileId === t.id));
+      for (const tile of remainingTiles) {
+        if (placedCount >= 15) break;
+        let forced = false;
+        for (let r = 0; r < GRID_SIZE; r++) {
+          for (let c = 0; c < GRID_SIZE; c++) {
+            // Try 1x1 first (even for 1x2 tiles, just squeeze them in if needed)
+            if (!currentGrid[r][c].tileId) {
+              currentGrid[r][c] = {
+                ...currentGrid[r][c],
+                tileId: tile.id,
+                letter: tile.letter,
+                tier: tile.tier,
+                isSpecial: tile.isSpecial,
+                hitsRequired: tile.isSpecial === 'vault' ? 2 : 1,
+                hitsReceived: 0,
+              };
+              history.push({ row: r, col: c, tileId: tile.id, size: 1, orientation: 'h' });
+              placedCount++;
+              forced = true;
+              break;
+            }
+          }
+          if (forced) break;
         }
       }
     }
 
-    if (placedCount === 15) {
+    if (placedCount >= 15) {
       setGameState(prev => {
         const nextPlayer = player === 1 ? 2 : 1;
         const isLastPlayer = player === 2;
