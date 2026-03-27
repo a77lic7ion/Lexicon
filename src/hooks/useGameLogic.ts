@@ -340,6 +340,7 @@ export const useGameLogic = () => {
 
 
   const placeTile = (player: 1 | 2, row: number, col: number, tile: LetterTile, orientation: 'h' | 'v') => {
+    setError(null);
     const playerState = gameState.players[player];
     const newGrid = [...playerState.grid.map(r => [...r])];
 
