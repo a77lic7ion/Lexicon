@@ -54,11 +54,11 @@ export default function App() {
 
   if (showMenu) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-12 overflow-hidden relative">
+      <div className="h-full w-full bg-slate-950 flex items-center justify-center p-6 overflow-hidden relative">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="flex flex-col items-center gap-16 z-10 max-w-2xl w-full relative"
+          className="flex flex-col items-center gap-12 z-10 max-w-4xl w-full relative"
         >
           <div className="flex flex-col items-center gap-8 text-center">
             <div className="bg-slate-900 p-10 rounded-full border-4 border-slate-800 shadow-2xl relative">
@@ -168,7 +168,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-yellow-500/30">
+    <div className="h-full w-full bg-slate-950 text-slate-100 font-sans selection:bg-yellow-500/30 overflow-hidden">
       <AnimatePresence mode="wait">
         {isSettingsOpen && (
           <SettingsModal

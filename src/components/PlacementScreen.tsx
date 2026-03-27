@@ -128,7 +128,7 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 items-start justify-center p-8 bg-slate-950 min-h-screen relative overflow-hidden">
+    <div className="flex flex-col lg:flex-row gap-8 items-center justify-center p-2 bg-slate-950 h-full w-full relative overflow-hidden">
       <div className="flex flex-col gap-6 w-full lg:w-auto z-10 relative items-center lg:items-start">
         <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-900/40 p-6 rounded border border-slate-800 w-full">
           <div className="flex flex-col gap-1 relative z-20 text-center sm:text-left mb-4 sm:mb-0">
@@ -203,7 +203,7 @@ export const PlacementScreen: React.FC<PlacementScreenProps> = ({
         </button>
       </div>
 
-      <div className="flex flex-col gap-6 w-full lg:w-[28rem] z-10 relative">
+      <div className="flex flex-col gap-6 w-full lg:w-[24rem] z-10 relative overflow-y-auto custom-scrollbar h-full pr-1">
         <div className="bg-slate-900/40 p-6 rounded border border-slate-800 flex flex-col gap-6">
           <div className="flex justify-between items-center">
             <h3 className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">

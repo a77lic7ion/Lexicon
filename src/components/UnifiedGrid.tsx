@@ -32,7 +32,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
 
   return (
     <div 
-      className="flex flex-col gap-4 p-6 bg-slate-950 rounded border border-slate-800 shadow-sm"
+      className="flex flex-col gap-2 p-1.5 sm:p-4 bg-slate-950 rounded border border-slate-800 shadow-sm transition-all duration-300"
       onMouseLeave={onCellMouseLeave}
     >
       <div className="grid grid-cols-[24px_1fr] grid-rows-[24px_1fr] gap-0">
@@ -42,7 +42,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
         {/* Column Labels */}
         <div className="grid grid-cols-10 gap-0">
           {cols.map(c => (
-            <div key={c} className="w-10 h-6 flex items-center justify-center text-[10px] font-mono text-slate-500 uppercase">
+            <div key={c} className="w-[6.5vmin] h-[3.5vmin] flex items-center justify-center text-[10px] font-mono text-slate-500 uppercase">
               {c}
             </div>
           ))}
@@ -51,7 +51,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
         {/* Row Labels */}
         <div className="grid grid-rows-10 gap-0">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="w-6 h-10 flex items-center justify-center text-[10px] font-mono text-slate-500">
+            <div key={i} className="w-[3.5vmin] h-[6.5vmin] flex items-center justify-center text-[10px] font-mono text-slate-500">
               {i + 1}
             </div>
           ))}
@@ -101,7 +101,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
                 onClick={() => onCellClick(r, c)}
                 onMouseEnter={() => onCellMouseEnter?.(r, c)}
                 className={`
-                  w-10 h-10 ${bgColor}
+                  w-[6.5vmin] h-[6.5vmin] ${bgColor}
                   flex items-center justify-center cursor-pointer relative
                   transition-colors duration-100 group
                   hover:bg-slate-800/40

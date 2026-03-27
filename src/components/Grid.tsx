@@ -37,7 +37,7 @@ export const Grid: React.FC<GridProps> = ({
           {showLabels ? (
             <div className="grid grid-cols-10 gap-px px-2">
               {cols.map(c => (
-                <div key={c} className="w-8 h-8 flex items-center justify-center text-[10px] font-mono text-slate-600 uppercase">
+                <div key={c} className="w-[6.5vmin] h-[6.5vmin] flex items-center justify-center text-[10px] font-mono text-slate-600 uppercase">
                   {c}
                 </div>
               ))}
@@ -48,7 +48,7 @@ export const Grid: React.FC<GridProps> = ({
           {showLabels ? (
             <div className="grid grid-rows-10 gap-px py-2">
               {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="w-8 h-8 flex items-center justify-center text-[10px] font-mono text-slate-600">
+                <div key={i} className="w-[6.5vmin] h-[6.5vmin] flex items-center justify-center text-[10px] font-mono text-slate-600">
                   {i + 1}
                 </div>
               ))}
@@ -73,7 +73,7 @@ export const Grid: React.FC<GridProps> = ({
                   onClick={() => onCellClick?.(cell.row, cell.col)}
                   onMouseEnter={() => onCellMouseEnter?.(cell.row, cell.col)}
                   className={`
-                    w-8 h-8 border border-slate-900
+                    w-[6.5vmin] h-[6.5vmin] border border-slate-900
                     flex items-center justify-center cursor-pointer relative
                     transition-colors duration-100 group
                     ${isEnemy ? 'bg-slate-950' : hasTile ? 'bg-slate-900 border-slate-800' : 'bg-slate-950'}

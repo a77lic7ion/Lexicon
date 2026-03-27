@@ -12,7 +12,7 @@ interface LetterBankProps {
 
 export const LetterBank: React.FC<LetterBankProps> = ({ bank, onTileClick, title = "Letter Bank", hidden = false }) => {
   return (
-    <div className="flex flex-col gap-1 p-2 bg-slate-900/40 rounded-xl border border-slate-800 shadow-lg w-full backdrop-blur-md relative overflow-hidden group">
+    <div className="flex flex-col gap-0.5 p-1.5 bg-slate-900/40 rounded-xl border border-slate-800 shadow-lg w-full backdrop-blur-md relative overflow-hidden group">
       <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
       
       <div className="flex justify-between items-center px-1">
@@ -24,7 +24,7 @@ export const LetterBank: React.FC<LetterBankProps> = ({ bank, onTileClick, title
         </span>
       </div>
       
-      <div className="flex flex-wrap gap-1 min-h-[48px] p-1.5 bg-slate-950/40 rounded-lg border border-slate-800/30 shadow-inner relative">
+      <div className="flex flex-wrap gap-1 min-h-[40px] p-1 bg-slate-950/40 rounded-lg border border-slate-800/30 shadow-inner relative">
         <div className="absolute inset-0 bg-grid-slate-800/[0.05] pointer-events-none" />
         <AnimatePresence>
           {bank.map((tile, idx) => (
