@@ -36,12 +36,12 @@ The length of the word you create determines the magnitude of the tactical strik
 
 | Word Length    | Effect Name   | Description                                                       | Targeting         |
 |:-------------- |:------------- |:----------------------------------------------------------------- |:----------------- |
-| **3 Letters**  | **Spark**     | Reveals a full row or column.                                     | Row/Col Selection |
-| **4 Letters**  | **Blast**     | Destroys a single targeted cell (guaranteed hit if tile present). | Single Cell       |
-| **5 Letters**  | **Surge**     | Reveals a full row or column + damages tiles.                     | Row/Col Selection |
-| **6 Letters**  | **Storm**     | Devastates a 2x2 area.                                            | 2x2 Block         |
-| **7 Letters**  | **Tempest**   | Steals 3 random units from the opponent's bank.                   | Immediate         |
-| **8+ Letters** | **Cataclysm** | Obliterates an entire row or column.                              | Row/Col Selection |
+| **3 Letters**  | **Spark**     | Scans a row/column for the presence of enemy tiles.   | Row/Col Selection |
+| **4 Letters**  | **Blast**     | Precision strike on a single targeted cell.           | Single Cell       |
+| **5 Letters**  | **Surge**     | Reveals all tile positions in a targeted row or column.| Row/Col Selection |
+| **6 Letters**  | **Storm**     | Inflicts heavy damage in a 2x2 area.                  | 2x2 Block         |
+| **7 Letters**  | **Tempest**   | Extracts a random letter from the opponent's bank.    | Immediate         |
+| **8+ Letters** | **Obliterate**| Total destruction of an entire row or column.         | Row/Col Selection |
 
 ---
 
@@ -57,12 +57,14 @@ The length of the word you create determines the magnitude of the tactical strik
 
 ### Design Evolution & Refinements
 
-1. **Centralized Board Layout**: The battle screen has been redesigned to place the **Game Board** as the central and largest element, maximizing visual clarity and tactical focus.
-2. **Thinner Tile Racks**: The player and opponent letter banks have been redesigned as thin, rack-like elements (similar to Scrabble), reducing visual clutter and emphasizing the board.
-3. **Arm-Before-Targeting Logic**: Word Bomb targeting is now strictly enabled only *after* a valid word has been entered and "Armed". This prevents accidental targeting and ensures a deliberate tactical flow.
-4. **Unified View Default**: The "Hybrid" view has been stripped out in favor of the **Unified Grid** as the sole, optimized default, providing a cohesive visual space for all interactions.
-5. **Strict Grid Alignment**: Column (A-J) and Row (1-10) labels are strictly aligned with the grid cells, ensuring precise coordinate tracking.
-6. **Mobile Optimization**: The entire UI is optimized for mobile responsiveness, using flexible layouts and touch-friendly targets while maintaining the "Mission Control" aesthetic.
+1. **Definitive 3-Column Command Center**: The interface is anchored by a structured 3-column grid:
+    *   **Left (Branding & Intel)**: High-fidelity mission logo and "Victory Protocol" win conditions.
+    *   **Middle (Tactical Area)**: The **Expanded Unified Grid** dominates the screen, scaling to maximum visibility.
+    *   **Right (Command & Control)**: Dual-player racks, Word Bomb assembly, and turn-status telemetry.
+2. **Tactical Codex (Tutorial)**: A dedicated rulebook module provides interactive guidance on deployment, tiers, and Word Bomb mechanics.
+3. **Advanced Scaling Logic**: Components dynamically adjust to viewport dimensions, with sophisticated vertical and horizontal scrolling management to ensure "Mission Integrity" across all devices.
+4. **Optimized Auto-Deployment**: A multi-attempt heuristic algorithm (100+ global passes) guarantees a valid, rule-compliant 15-tile layout for players who prefer rapid initial deployment.
+5. **Word Bomb Assembly Area**: Redesigned as a vertical sidebar component for better parity with the board and tactile word-building.
 
 ---
 
