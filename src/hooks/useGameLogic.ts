@@ -221,9 +221,9 @@ export const useGameLogic = () => {
     
     const toPlace: LetterTile[] = [];
     
-    // 1. Pick 3 Common tiles (vowels preferred for strategy)
+    // 1. Pick 6 Common tiles (vowels preferred for strategic lexical density)
     const commonPool = pool.filter(t => t.tier === 'common');
-    const vowels = shuffle(commonPool.filter(t => ['A', 'E', 'I', 'O', 'U'].includes(t.letter))).slice(0, 3);
+    const vowels = shuffle(commonPool.filter(t => ['A', 'E', 'I', 'O', 'U'].includes(t.letter))).slice(0, 6);
     toPlace.push(...vowels);
     
     // 2. Pick Rare (Max 2)
@@ -425,8 +425,8 @@ export const useGameLogic = () => {
     const wildcardCount = placedTileObjects.filter(t => t.tier === 'wildcard').length;
     const specialCount = placedTileObjects.filter(t => t.tier === 'special').length;
 
-    if (vowelCount < 3) {
-      setError('Deployment Error: Minimum 3 Vowels (A, E, I, O, U) required');
+    if (vowelCount < 5) {
+      setError('Deployment Error: Minimum 5 Vowels (A, E, I, O, U) required for tactical depth');
       return;
     }
     if (rareCount > 2) {
@@ -991,9 +991,9 @@ export const useGameLogic = () => {
     
     const toPlace: LetterTile[] = [];
     
-    // 1. Pick 3 Common tiles
+    // 1. Pick 6 Common tiles
     const commonPool = pool.filter(t => t.tier === 'common');
-    const vowels = shuffle(commonPool.filter(t => ['A', 'E', 'I', 'O', 'U'].includes(t.letter))).slice(0, 3);
+    const vowels = shuffle(commonPool.filter(t => ['A', 'E', 'I', 'O', 'U'].includes(t.letter))).slice(0, 6);
     toPlace.push(...vowels);
     
     // 2. Pick Rare (Max 2)

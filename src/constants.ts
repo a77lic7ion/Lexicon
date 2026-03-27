@@ -50,8 +50,11 @@ export const TIERS: Record<Tier, { color: string; border: string; glow: string; 
 };
 
 export const LETTER_POOL: LetterTile[] = [
-  // Common (18 in pool, up to 10 placed)
-  ...(['E', 'A', 'I', 'O', 'U', 'R', 'T', 'N', 'S'] as const).flatMap(l => 
+  // Common (21 in pool, up to 10 placed)
+  ...(['E', 'A', 'I', 'O', 'U'] as const).flatMap(l => 
+    Array(3).fill(null).map((_, i) => ({ id: `common-${l}-${i}`, letter: l, tier: 'common' as Tier, points: 1, size: 1 as const }))
+  ),
+  ...(['R', 'T', 'N', 'S'] as const).flatMap(l => 
     Array(2).fill(null).map((_, i) => ({ id: `common-${l}-${i}`, letter: l, tier: 'common' as Tier, points: 1, size: 1 as const }))
   ),
   // Uncommon (9 in pool, up to 4 placed, 1x2)

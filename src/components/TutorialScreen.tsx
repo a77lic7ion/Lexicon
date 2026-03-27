@@ -32,7 +32,7 @@ const STAGES = [
             <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400 font-bold">03</div>
             <div>
               <h4 className="text-white font-bold text-sm mb-1">COMPOSITION</h4>
-              <p className="text-xs text-slate-400">Min 3 Vowels (Common). Max 2 Rare. Max 1 Wildcard. Max 1 of each Special Asset.</p>
+              <p className="text-xs text-slate-400">Min 5 Vowels (Common). Max 2 Rare. Max 1 Wildcard. Max 1 of each Special Asset.</p>
             </div>
           </div>
         </div>
