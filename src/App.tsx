@@ -10,6 +10,7 @@ import { Sword, BookOpen, Settings, Play, Info } from 'lucide-react';
 
 export default function App() {
   const {
+    toasts,
     gameState,
     message,
     error,
@@ -76,7 +77,7 @@ export default function App() {
         >
           <div className="flex flex-col items-center gap-6 text-center">
             <img 
-              src="/new logo.png" 
+              src="/logo.jpeg"
               alt="LEXICON Logo" 
               className="w-full max-w-5xl max-h-[45vh] object-contain relative z-20"
             />
@@ -244,6 +245,7 @@ export default function App() {
             exit={{ opacity: 0 }}
           >
             <BattleScreen
+              toasts={toasts}
               gameState={gameState}
               onFire={fire}
               onExecuteBomb={executeBomb}

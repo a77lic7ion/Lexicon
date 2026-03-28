@@ -181,7 +181,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
     <div className="grid grid-cols-[240px_1fr_360px] bg-slate-950 h-screen w-full relative overflow-hidden">
       <div className="flex flex-col gap-6 p-4 border-r border-slate-900 bg-slate-950/50 overflow-y-auto custom-scrollbar">
         <div className="flex flex-col gap-4">
-          <img src="/new logo.png" alt="LEXICON Logo" className="w-full object-contain rounded-lg border border-slate-800 shadow-xl" />
+          <img src="/logo.jpeg" alt="LEXICON Logo" className="w-full object-contain rounded-lg border border-slate-800 shadow-xl" />
           <span className="text-xl font-serif font-black text-yellow-500 tracking-tight uppercase text-center">LEXICON</span>
         </div>
         <div className="flex flex-col gap-3">

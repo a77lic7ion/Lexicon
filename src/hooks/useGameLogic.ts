@@ -25,6 +25,161 @@ const createEmptyGrid = (): CellState[][] => {
   return grid;
 };
 
+const generateRandomGrid = () => {
+  let currentGrid = createEmptyGrid();
+  let placedCount = 0;
+  let history: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[] = [];
+
+  const shuffle = <T>(array: T[]): T[] => {
+    const newArr = [...array];
+    for (let i = newArr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+    }
+    return newArr;
+  };
+
+  const pool = shuffle([...LETTER_POOL]);
+  const specials = shuffle([...SPECIAL_TILES]);
+
+  const toPlace: LetterTile[] = [];
+
+  // Pick 8 Common tiles
+  const commonPool = pool.filter(t => t.tier === 'common');
+  const vowels = shuffle(commonPool.filter(t => ['A', 'E', 'I', 'O', 'U'].includes(t.letter))).slice(0, 8);
+  toPlace.push(...vowels);
+
+  // Pick Rare (Max 2)
+  const rarePool = pool.filter(t => t.tier === 'rare');
+  toPlace.push(...rarePool.slice(0, 2));
+
+  // Pick Wildcard (Max 1)
+  const wildcard = pool.find(t => t.tier === 'wildcard');
+  if (wildcard) toPlace.push(wildcard);
+
+  // Pick 6 Uncommon
+  const uncommonPool = pool.filter(t => t.tier === 'uncommon');
+  toPlace.push(...uncommonPool.slice(0, 6));
+
+  // Pick Specials
+  toPlace.push(...specials);
+
+  // Fill remaining to TOTAL_TILES
+  const remainingPool = shuffle(pool.filter(t => !toPlace.find(p => p.id === t.id)));
+  if (toPlace.length > TOTAL_TILES) {
+    toPlace.splice(TOTAL_TILES);
+  } else {
+    const needed = TOTAL_TILES - toPlace.length;
+    if (needed > 0) {
+      toPlace.push(...remainingPool.slice(0, needed));
+    }
+  }
+
+  let globalAttempts = 0;
+  while (placedCount < TOTAL_TILES && globalAttempts < 40) {
+    globalAttempts++;
+    currentGrid = createEmptyGrid();
+    placedCount = 0;
+    history = [];
+
+    const shuffledToPlace = shuffle(toPlace);
+
+    for (const tile of shuffledToPlace) {
+      let placed = false;
+      let attempts = 0;
+      while (!placed && attempts < 50) {
+        attempts++;
+        const r = Math.floor(Math.random() * GRID_SIZE);
+        const c = Math.floor(Math.random() * GRID_SIZE);
+        const orientation = Math.random() > 0.5 ? 'h' : 'v';
+
+        const cells: { r: number; c: number }[] = [];
+        let valid = true;
+        for (let i = 0; i < tile.size; i++) {
+          const nr = orientation === 'v' ? r + i : r;
+          const nc = orientation === 'h' ? c + i : c;
+          if (nr >= GRID_SIZE || nc >= GRID_SIZE || currentGrid[nr][nc].tileId) {
+            valid = false;
+            break;
+          }
+          cells.push({ r: nr, c: nc });
+        }
+
+        if (valid) {
+          const bufferSize = globalAttempts < 5 ? 1 : 0;
+          if (bufferSize > 0) {
+            for (const cell of cells) {
+              for (let dr = -bufferSize; dr <= bufferSize; dr++) {
+                for (let dc = -bufferSize; dc <= bufferSize; dc++) {
+                  const nr = cell.r + dr;
+                  const nc = cell.c + dc;
+                  if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
+                    if (currentGrid[nr][nc].tileId) {
+                      valid = false;
+                      break;
+                    }
+                  }
+                }
+                if (!valid) break;
+              }
+              if (!valid) break;
+            }
+          }
+        }
+
+        if (valid) {
+          cells.forEach(cell => {
+            currentGrid[cell.r][cell.c] = {
+              ...currentGrid[cell.r][cell.c],
+              tileId: tile.id,
+              letter: tile.letter,
+              tier: tile.tier,
+              isSpecial: tile.isSpecial,
+              hitsRequired: tile.isSpecial === 'vault' ? 2 : 1,
+              hitsReceived: 0,
+            };
+          });
+          history.push({ row: r, col: c, tileId: tile.id, size: tile.size, orientation });
+          placedCount++;
+          placed = true;
+          if (placedCount >= TOTAL_TILES) break;
+        }
+      }
+      if (placedCount >= TOTAL_TILES) break;
+    }
+  }
+
+  if (placedCount < TOTAL_TILES) {
+    const remainingTiles = toPlace.filter(t => !history.find(h => h.tileId === t.id));
+    for (const tile of remainingTiles) {
+      if (placedCount >= TOTAL_TILES) break;
+      let forced = false;
+      for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+          if (!currentGrid[r][c].tileId) {
+            currentGrid[r][c] = {
+              ...currentGrid[r][c],
+              tileId: tile.id,
+              letter: tile.letter,
+              tier: tile.tier,
+              isSpecial: tile.isSpecial,
+              hitsRequired: tile.isSpecial === 'vault' ? 2 : 1,
+              hitsReceived: 0,
+            };
+            history.push({ row: r, col: c, tileId: tile.id, size: 1, orientation: 'h' });
+            placedCount++;
+            forced = true;
+            break;
+          }
+        }
+        if (forced) break;
+      }
+    }
+  }
+
+  return { grid: currentGrid, placedCount, history };
+};
+
 const initialPlayerState = (id: 1 | 2): PlayerState => ({
   id,
   name: `Player ${id}`,
@@ -210,164 +365,14 @@ export const useGameLogic = () => {
   };
 
   const autoPlace = (player: 1 | 2) => {
-    let currentGrid = createEmptyGrid();
-    let placedCount = 0;
-    let history: { row: number; col: number; tileId: string; size: number; orientation: 'h' | 'v' }[] = [];
-    
-    const shuffle = <T>(array: T[]): T[] => {
-      const newArr = [...array];
-      for (let i = newArr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
-      }
-      return newArr;
-    };
-
-    const pool = shuffle([...LETTER_POOL]);
-    const specials = shuffle([...SPECIAL_TILES]);
-    
-    const toPlace: LetterTile[] = [];
-    
-    // Pick 8 Common tiles
-    const commonPool = pool.filter(t => t.tier === 'common');
-    const vowels = shuffle(commonPool.filter(t => ['A', 'E', 'I', 'O', 'U'].includes(t.letter))).slice(0, 8);
-    toPlace.push(...vowels);
-    
-    // Pick Rare (Max 2)
-    const rarePool = pool.filter(t => t.tier === 'rare');
-    toPlace.push(...rarePool.slice(0, 2));
-    
-    // Pick Wildcard (Max 1)
-    const wildcard = pool.find(t => t.tier === 'wildcard');
-    if (wildcard) toPlace.push(wildcard);
-    
-    // Pick 6 Uncommon
-    const uncommonPool = pool.filter(t => t.tier === 'uncommon');
-    toPlace.push(...uncommonPool.slice(0, 6));
-    
-    // Pick Specials
-    toPlace.push(...specials);
-    
-    // Fill remaining to TOTAL_TILES
-    const remainingPool = shuffle(pool.filter(t => !toPlace.find(p => p.id === t.id)));
-    if (toPlace.length > TOTAL_TILES) {
-      toPlace.splice(TOTAL_TILES);
-    } else {
-      const needed = TOTAL_TILES - toPlace.length;
-      if (needed > 0) {
-        toPlace.push(...remainingPool.slice(0, needed));
-      }
-    }
-
-    let globalAttempts = 0;
-    while (placedCount < TOTAL_TILES && globalAttempts < 40) {
-      globalAttempts++;
-      currentGrid = createEmptyGrid();
-      placedCount = 0;
-      history = [];
-
-      const shuffledToPlace = shuffle(toPlace);
-
-      for (const tile of shuffledToPlace) {
-        let placed = false;
-        let attempts = 0;
-        while (!placed && attempts < 50) {
-          attempts++;
-          const r = Math.floor(Math.random() * GRID_SIZE);
-          const c = Math.floor(Math.random() * GRID_SIZE);
-          const orientation = Math.random() > 0.5 ? 'h' : 'v';
-
-          const cells: { r: number; c: number }[] = [];
-          let valid = true;
-          for (let i = 0; i < tile.size; i++) {
-            const nr = orientation === 'v' ? r + i : r;
-            const nc = orientation === 'h' ? c + i : c;
-            if (nr >= GRID_SIZE || nc >= GRID_SIZE || currentGrid[nr][nc].tileId) {
-              valid = false;
-              break;
-            }
-            cells.push({ r: nr, c: nc });
-          }
-
-          if (valid) {
-            const bufferSize = globalAttempts < 5 ? 1 : 0;
-            if (bufferSize > 0) {
-              for (const cell of cells) {
-                for (let dr = -bufferSize; dr <= bufferSize; dr++) {
-                  for (let dc = -bufferSize; dc <= bufferSize; dc++) {
-                    const nr = cell.r + dr;
-                    const nc = cell.c + dc;
-                    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
-                      if (currentGrid[nr][nc].tileId) {
-                        valid = false;
-                        break;
-                      }
-                    }
-                  }
-                  if (!valid) break;
-                }
-                if (!valid) break;
-              }
-            }
-          }
-
-          if (valid) {
-            cells.forEach(cell => {
-              currentGrid[cell.r][cell.c] = {
-                ...currentGrid[cell.r][cell.c],
-                tileId: tile.id,
-                letter: tile.letter,
-                tier: tile.tier,
-                isSpecial: tile.isSpecial,
-                hitsRequired: tile.isSpecial === 'vault' ? 2 : 1,
-                hitsReceived: 0,
-              };
-            });
-            history.push({ row: r, col: c, tileId: tile.id, size: tile.size, orientation });
-            placedCount++;
-            placed = true;
-            if (placedCount >= TOTAL_TILES) break;
-          }
-        }
-        if (placedCount >= TOTAL_TILES) break;
-      }
-    }
-
-    if (placedCount < TOTAL_TILES) {
-      const remainingTiles = toPlace.filter(t => !history.find(h => h.tileId === t.id));
-      for (const tile of remainingTiles) {
-        if (placedCount >= TOTAL_TILES) break;
-        let forced = false;
-        for (let r = 0; r < GRID_SIZE; r++) {
-          for (let c = 0; c < GRID_SIZE; c++) {
-            if (!currentGrid[r][c].tileId) {
-              currentGrid[r][c] = {
-                ...currentGrid[r][c],
-                tileId: tile.id,
-                letter: tile.letter,
-                tier: tile.tier,
-                isSpecial: tile.isSpecial,
-                hitsRequired: tile.isSpecial === 'vault' ? 2 : 1,
-                hitsReceived: 0,
-              };
-              history.push({ row: r, col: c, tileId: tile.id, size: 1, orientation: 'h' });
-              placedCount++;
-              forced = true;
-              break;
-            }
-          }
-          if (forced) break;
-        }
-      }
-    }
-
+    const { grid, placedCount, history } = generateRandomGrid();
     setGameState(prev => ({
       ...prev,
       players: {
         ...prev.players,
         [player]: {
           ...prev.players[player],
-          grid: currentGrid,
+          grid,
           tilesPlaced: placedCount,
           placementHistory: history,
         },
@@ -455,8 +460,8 @@ export const useGameLogic = () => {
     const vowels = ['A', 'E', 'I', 'O', 'U'];
     const vowelCount = placedTileObjects.filter(t => t.tier === 'common' && vowels.includes(t.letter)).length;
 
-    if (vowelCount < 7) {
-      setError('Deployment Error: Minimum 7 Vowels required for tactical depth');
+    if (vowelCount < 5) {
+      setError('Deployment Error: Minimum 5 Vowels required for tactical depth');
       return;
     }
 
@@ -876,13 +881,13 @@ export const useGameLogic = () => {
   }, [gameState.activePlayer, gameState.phase, aiTurn]);
 
   const aiSetup = (player: 1 | 2) => {
-    autoPlace(player);
+    const { grid, placedCount, history } = generateRandomGrid();
     setGameState(prev => {
       const isLastPlayer = player === 2;
       return {
         ...prev,
         phase: isLastPlayer ? 'battle' : 'setup',
-        players: { ...prev.players, [player]: { ...prev.players[player], isReady: true } },
+        players: { ...prev.players, [player]: { ...prev.players[player], grid, tilesPlaced: placedCount, placementHistory: history, isReady: true } },
         activePlayer: isLastPlayer ? 1 : (player === 1 ? 2 : 1),
         message: isLastPlayer ? `Battle begins! ${prev.players[1].name}'s turn.` : `${prev.players[2].name}: Place your tiles.`,
       };
