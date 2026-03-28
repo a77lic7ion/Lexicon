@@ -66,3 +66,10 @@ export interface GameState {
     playerId: 1 | 2;
   };
 }
+
+export interface Toast {
+  id: string;
+  type: 'harvest' | 'miss' | 'hit' | 'poison' | 'damaged' | 'info';
+  message: string;
+  duration: number;
+}
