@@ -165,9 +165,9 @@ export default function App() {
             </div>
             <div className="bg-slate-950/50 p-4 rounded border border-slate-800 relative z-10">
               <p className="text-[11px] font-mono font-bold text-slate-600 italic text-center uppercase tracking-widest">
-                {gameState.winMode === 'classic' && 'Destroy all 15 enemy tiles'}
+                {gameState.winMode === 'classic' && 'Destroy all 20 enemy tiles'}
                 {gameState.winMode === 'lexicon' && 'Fire an 8-letter bomb'}
-                {gameState.winMode === 'hybrid' && 'Destroy 10 tiles OR fire 7-letter bomb'}
+                {gameState.winMode === 'hybrid' && 'Destroy 15 tiles OR fire 7-letter bomb'}
               </p>
             </div>
           </div>

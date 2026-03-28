@@ -1,4 +1,3 @@
-// A small subset of common Scrabble words for validation
 export const COMMON_WORDS = new Set([
   'THE', 'AND', 'FOR', 'ARE', 'BUT', 'NOT', 'YOU', 'ALL', 'ANY', 'CAN', 'HAD', 'HER', 'WAS', 'ONE', 'OUR', 'OUT', 'DAY', 'GET', 'HAS', 'HIM', 'HIS', 'HOW', 'MAN', 'NEW', 'NOW', 'OLD', 'SEE', 'TWO', 'WAY', 'WHO', 'BOY', 'DID', 'ITS', 'LET', 'PUT', 'SAY', 'SHE', 'TOO', 'USE', 'ACT', 'ADD', 'AGE', 'AIR', 'ART', 'ASK', 'BAD', 'BAG', 'BAR', 'BAT', 'BED', 'BEE', 'BIG', 'BIT', 'BOX', 'BUS', 'CAR', 'CAT', 'CUP', 'CUT', 'DOG', 'DRY', 'EAT', 'EGG', 'END', 'EYE', 'FAN', 'FAR', 'FAT', 'FIG', 'FLY', 'FUN', 'GAS', 'GUM', 'HAT', 'HIT', 'HOT', 'ICE', 'INK', 'JAM', 'JET', 'JOB', 'KEY', 'LAP', 'LEG', 'LIP', 'LOG', 'LOW', 'MAD', 'MAP', 'MAT', 'MIX', 'MUD', 'NET', 'NIL', 'ODD', 'OFF', 'OIL', 'OWN', 'PAD', 'PAN', 'PAY', 'PEN', 'PET', 'PIG', 'PIN', 'POT', 'RAT', 'RAW', 'RED', 'RIB', 'RID', 'ROB', 'ROD', 'RUN', 'SAD', 'SEA', 'SET', 'SEW', 'SIN', 'SIT', 'SIX', 'SKY', 'SON', 'SUN', 'TAP', 'TAX', 'TEA', 'TEN', 'TIE', 'TIP', 'TOP', 'TOY', 'TRY', 'VAN', 'WAR', 'WET', 'WIN', 'YES', 'ZIP',
   'THAT', 'WITH', 'HAVE', 'THIS', 'WILL', 'YOUR', 'FROM', 'THEY', 'KNOW', 'WANT', 'BEEN', 'MUCH', 'SOME', 'TIME', 'VERY', 'WHEN', 'COME', 'HERE', 'JUST', 'LIKE', 'LONG', 'MAKE', 'MANY', 'MORE', 'ONLY', 'OVER', 'SUCH', 'THAN', 'THEM', 'THEN', 'UPON', 'ABOUT', 'AFTER', 'AGAIN', 'COULD', 'EVERY', 'FIRST', 'GREAT', 'OTHER', 'RIGHT', 'SMALL', 'SOUND', 'STILL', 'THESE', 'THING', 'THINK', 'THREE', 'WATER', 'WHERE', 'WHICH', 'WORLD', 'WOULD', 'WRITE', 'YEARS',
@@ -10,7 +9,7 @@ export function isValidWord(word: string): boolean {
   const upperWord = word.toUpperCase();
   if (upperWord.length < 3) return false;
   if (COMMON_WORDS.has(upperWord)) return true;
-  return /^[A-Z]+$/.test(upperWord);
+  return false;
 }
 
 export async function validateWordOnline(word: string): Promise<boolean> {
@@ -26,6 +25,6 @@ export async function validateWordOnline(word: string): Promise<boolean> {
     const j = await r.json();
     return !!j.valid;
   } catch {
-    return true;
+    return COMMON_WORDS.has(upper);
   }
 }
