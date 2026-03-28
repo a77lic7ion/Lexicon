@@ -40,18 +40,18 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
         <div />
 
         {/* Column Labels */}
-        <div className="grid grid-cols-10 gap-0">
+        <div className="grid grid-cols-10 gap-px">
           {cols.map(c => (
-            <div key={c} className="w-[9.2vmin] h-[4.6vmin] flex items-center justify-center text-[10px] font-mono text-slate-500 uppercase">
+            <div key={c} className="w-[9.2vmin] h-[24px] flex items-center justify-center text-[10px] font-mono text-slate-500 uppercase">
               {c}
             </div>
           ))}
         </div>
 
         {/* Row Labels */}
-        <div className="grid grid-rows-10 gap-0">
+        <div className="grid grid-rows-10 gap-px">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="w-[4.6vmin] h-[9.2vmin] flex items-center justify-center text-[10px] font-mono text-slate-500">
+            <div key={i} className="w-[24px] h-[9.2vmin] flex items-center justify-center text-[10px] font-mono text-slate-500">
               {i + 1}
             </div>
           ))}
@@ -83,7 +83,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
             let bgColor = "bg-slate-950";
 
             if (hasMyTile) {
-              bgColor = isMyTileHit ? 'bg-red-900/40' : 'bg-red-800';
+              bgColor = isMyTileHit ? 'bg-red-950' : 'bg-red-800';
             } else if (isMyTileMiss) {
               bgColor = 'bg-slate-900';
             }
@@ -91,7 +91,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
             if (preview) {
               bgColor = preview.isValid ? 'bg-emerald-900/30' : 'bg-red-900/30';
             } else if (isHighlighted) {
-              bgColor = lastAction?.type === 'bomb' ? 'bg-yellow-900/20' : 'bg-red-900/20';
+              bgColor = lastAction?.type === 'bomb' ? 'bg-yellow-900/20' : 'bg-blue-900/20';
             }
 
             return (
@@ -114,7 +114,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
                   </span>
                 )}
 
-                {/* Enemy Hit on Me */}
+                {/* Enemy Hit on Me (Red with cracked texture overlay) */}
                 {isMyTileHit && (
                   <>
                     <span className="text-sm font-black text-white/30 absolute">
@@ -122,13 +122,14 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
                     </span>
                     <Flame className="w-6 h-6 text-orange-500 z-10 animate-pulse" />
                     <div className="absolute inset-0 border-2 border-red-600/50 mix-blend-overlay" />
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cracked-mud.png')] opacity-40 mix-blend-overlay" />
                   </>
                 )}
 
                 {/* My Shot Indicators (Blue/Teal) */}
                 {iHitThem && (
                   <div className="relative flex items-center justify-center w-full h-full bg-cyan-950/20">
-                    <Target className={`w-7 h-7 ${activePlayer === 1 ? 'text-cyan-500' : 'text-teal-500'} drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]`} />
+                    <Target className={`w-8 h-8 ${activePlayer === 1 ? 'text-cyan-500' : 'text-teal-500'} drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]`} />
                     {oppCell.letter && isTileDestroyed && (
                       <span className="text-[12px] font-black text-white absolute bg-cyan-900 border-2 border-cyan-400 px-1 rounded shadow-lg z-10">
                         {oppCell.letter}
@@ -138,7 +139,7 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
                 )}
 
                 {iMissedThem && (
-                  <X className="w-6 h-6 text-slate-700 opacity-50" />
+                  <X className="w-8 h-8 text-slate-700 opacity-50" />
                 )}
 
                 {/* Revealed Enemy Letter */}
