@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { CellState } from '../types';
-import { Target, X, Flame } from 'lucide-react';
+import { Target, X, Zap } from 'lucide-react';
 
 interface UnifiedGridProps {
   myGrid: CellState[][];
@@ -72,26 +72,14 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
             const iMissedThem = oppCell.isMiss;
             const isOppRevealed = oppCell.isRevealed;
 
-            const isTileDestroyed = oppCell.tileId
-              ? opponentGrid.flat().filter(cell => cell.tileId === oppCell.tileId).every(cell => cell.isHit)
-              : false;
-
             const isHighlighted = lastAction?.cells.some(cell => cell.r === r && cell.c === c);
             const preview = previewCells?.find(p => p.r === r && p.c === c);
 
-            // Determine Cell Background
-            let bgColor = "bg-slate-950";
-
-            if (hasMyTile) {
-              bgColor = isMyTileHit ? 'bg-red-950' : 'bg-red-800';
-            } else if (isMyTileMiss) {
-              bgColor = 'bg-slate-900';
-            }
-
+            let bgClass = "bg-slate-950";
             if (preview) {
-              bgColor = preview.isValid ? 'bg-emerald-900/30' : 'bg-red-900/30';
+              bgClass = preview.isValid ? 'bg-emerald-900/30' : 'bg-red-900/30';
             } else if (isHighlighted) {
-              bgColor = lastAction?.type === 'bomb' ? 'bg-yellow-900/20' : 'bg-blue-900/20';
+              bgClass = lastAction?.type === 'bomb' ? 'bg-yellow-900/10' : 'bg-blue-900/10';
             }
 
             return (
@@ -100,52 +88,60 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onCellClick(r, c)}
                 onMouseEnter={() => onCellMouseEnter?.(r, c)}
-                className={`
-                  w-[9.2vmin] h-[9.2vmin] ${bgColor}
-                  flex items-center justify-center cursor-pointer relative
-                  transition-colors duration-100 group
-                  hover:bg-slate-800/40
-                `}
+                className={`w-[9.2vmin] h-[9.2vmin] ${bgClass} flex items-center justify-center cursor-pointer relative transition-all duration-200 group`}
               >
-                {/* My Tile Indicator with Letter */}
-                {hasMyTile && !isMyTileHit && (
-                  <span className="text-sm font-black text-white drop-shadow-md">
-                    {myCell.letter}
-                  </span>
-                )}
-
-                {/* Enemy Hit on Me (Red with cracked texture overlay) */}
-                {isMyTileHit && (
-                  <>
-                    <span className="text-sm font-black text-white/30 absolute">
+                {/* LAYER 1: FLEET LAYER (70% Opacity) */}
+                {hasMyTile && (
+                  <div className={`absolute inset-0.5 rounded-sm flex items-center justify-center transition-opacity duration-300 ${
+                    isMyTileHit ? "bg-red-950/70 border border-red-900/50" : "bg-red-800/70 border border-red-700/50"
+                  }`}>
+                    <span className={`text-[14px] font-black tracking-tighter ${
+                      isMyTileHit ? "text-red-400/50" : "text-white"
+                    }`}>
                       {myCell.letter}
                     </span>
-                    <Flame className="w-6 h-6 text-orange-500 z-10 animate-pulse" />
-                    <div className="absolute inset-0 border-2 border-red-600/50 mix-blend-overlay" />
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cracked-mud.png')] opacity-40 mix-blend-overlay" />
-                  </>
-                )}
-
-                {/* My Shot Indicators (Blue/Teal) */}
-                {iHitThem && (
-                  <div className="relative flex items-center justify-center w-full h-full bg-cyan-950/20">
-                    <Target className={`w-8 h-8 ${activePlayer === 1 ? 'text-cyan-500' : 'text-teal-500'} drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]`} />
-                    {oppCell.letter && isTileDestroyed && (
-                      <span className="text-[12px] font-black text-white absolute bg-cyan-900 border-2 border-cyan-400 px-1 rounded shadow-lg z-10">
-                        {oppCell.letter}
-                      </span>
-                    )}
                   </div>
                 )}
 
-                {iMissedThem && (
-                  <X className="w-8 h-8 text-slate-700 opacity-50" />
-                )}
+                {/* LAYER 2: COMBAT OVERLAY (Transparent Background) */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  {/* Damage on Me */}
+                  {isMyTileHit && (
+                    <div className="absolute inset-0 bg-orange-600/10 flex items-center justify-center">
+                      <Zap className="w-6 h-6 text-orange-500 animate-pulse drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
+                      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cracked-mud.png')] opacity-30 mix-blend-overlay" />
+                    </div>
+                  )}
 
-                {/* Revealed Enemy Letter */}
-                {isOppRevealed && !iHitThem && (
-                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]" />
-                )}
+                  {/* My Miss on Them */}
+                  {isMyTileMiss && !hasMyTile && (
+                     <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
+                       <X className="w-8 h-8 text-slate-700/50" />
+                     </div>
+                  )}
+
+                  {/* My Hits on Them */}
+                  {iHitThem && (
+                    <div className="absolute inset-0 bg-cyan-950/10 flex items-center justify-center">
+                      <Target className="w-10 h-10 text-cyan-400/40 absolute" />
+                      {oppCell.letter && (
+                        <span className="text-xl font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(103,232,249,0.9)]">
+                          {oppCell.letter}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* My Misses on Them */}
+                  {iMissedThem && (
+                    <X className="w-10 h-10 text-slate-400/40" />
+                  )}
+
+                  {/* Reveal Indicators */}
+                  {isOppRevealed && !iHitThem && (
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80 shadow-[0_0_10px_rgba(234,179,8,0.8)] animate-pulse" />
+                  )}
+                </div>
               </motion.div>
             );
           })}
@@ -154,16 +150,16 @@ export const UnifiedGrid: React.FC<UnifiedGridProps> = ({
 
       {/* Legend */}
       <div className="flex gap-6 justify-center text-[10px] font-mono text-slate-500 uppercase font-bold mt-2">
-        <div className="flex items-center gap-2 text-red-500">
-          <div className="w-2 h-2 bg-red-800 rounded-sm" />
+        <div className="flex items-center gap-2 text-red-500/80">
+          <div className="w-2 h-2 bg-red-800/70 rounded-sm" />
           <span>Your Fleet</span>
         </div>
-        <div className="flex items-center gap-2 text-cyan-500">
+        <div className="flex items-center gap-2 text-cyan-500/80">
           <Target className="w-3 h-3" />
           <span>Enemy Hit</span>
         </div>
         <div className="flex items-center gap-2">
-          <X className="w-3 h-3 text-slate-800" />
+          <X className="w-3 h-3 text-slate-700" />
           <span>Sector Clear</span>
         </div>
       </div>
